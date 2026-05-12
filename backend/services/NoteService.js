@@ -10,8 +10,20 @@ async function DeleteNote(id) {
     return notes;
 }
 
+async function CreateNote(title, content, userId) {
+    const [notes] = await connection.query(
+        'INSERT INTO notes (title, content, user_id) VALUES (?, ?, ?)',
+        [title, content, userId]
+    );
+    return notes;
+}
 
-
+async function EditNote(id, title, content) {
+    const [notes] = await connection.query(
+        'UPDATE notes SET title = ?, content = ? WHERE id = ?',
+        [title, content, id]
+    );
+    return notes;
 
 
 
