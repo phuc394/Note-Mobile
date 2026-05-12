@@ -12,7 +12,23 @@ async function DeleteNote(req, res) {
     res.json(notes);
 }
 
+async function CreateNote(req, res) {
+    const { title, content, user_id } = req.body; 
+    const notes = await NoteService.CreateNote(title, content, user_id);
+    res.json(notes);
+}
+
+async function EditNote(req, res) {
+    const { id } = req.params;
+    const { title, content } = req.body;
+    
+    const notes = await NoteService.EditNote(id, title, content);
+    res.json(notes);
+}
+
 module.exports = {
+    CreateNote,
+    EditNote,
     SearchNotes,
     DeleteNote
 };
