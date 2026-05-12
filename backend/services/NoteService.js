@@ -26,12 +26,27 @@ async function EditNote(id, title, content) {
     return notes;
 }
 
+async function getAllNotes() {
+    const [notes] = await connection.query('SELECT * FROM notes');
+    return notes;
+}
+
+async function getNoteById(id) {
+    const [notes] = await connection.query(
+        'SELECT * FROM notes WHERE id = ?',
+        [id]
+    );
+    return notes;
+}
+
 
 module.exports = {
     SearchNotes,
     DeleteNote,
     CreateNote,
-    EditNote
+    EditNote,
+    getAllNotes,
+    getNoteById
 };
 
 

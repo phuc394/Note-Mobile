@@ -26,9 +26,22 @@ async function EditNote(req, res) {
     res.json(notes);
 }
 
+async function getAllNotes(req, res) {
+    const notes = await NoteService.getAllNotes();
+    res.json(notes);
+}
+
+async function getNoteById(req, res) {
+    const { id } = req.params;
+    const notes = await NoteService.getNoteById(id);
+    res.json(notes);
+}
+
 module.exports = {
     CreateNote,
     EditNote,
     SearchNotes,
-    DeleteNote
+    DeleteNote,
+    getAllNotes,
+    getNoteById
 };
