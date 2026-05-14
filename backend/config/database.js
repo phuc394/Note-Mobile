@@ -1,4 +1,4 @@
-const mysql = require('mysql2');
+import mysql from 'mysql2';
 
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -9,4 +9,4 @@ const connection = mysql.createConnection({
     database: 'note_mobile_db'
 });
 
-module.exports = connection;
+export default connection;
