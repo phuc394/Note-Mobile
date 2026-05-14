@@ -23,6 +23,7 @@ CREATE TABLE notes (
     is_public BOOLEAN DEFAULT 0, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_pinned BOOLEAN DEFAULT 0, -- Cột ghim ghi chú, mặc định là 0 (không ghim)
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
