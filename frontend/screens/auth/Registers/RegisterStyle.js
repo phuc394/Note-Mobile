@@ -1,0 +1,145 @@
+import { StyleSheet, Dimensions } from "react-native";
+
+const { width } = Dimensions.get("window");
+const isWeb = width > 500;
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    paddingVertical: 40,
+  },
+  card: {
+    width: isWeb ? 420 : width * 0.9,
+    backgroundColor: "rgba(23, 23, 45, 0.85)",
+    borderRadius: 35,
+    paddingHorizontal: 25,
+    paddingVertical: 40,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    alignItems: "center",
+    // Đổ bóng cho Card
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.5,
+    shadowRadius: 30,
+    elevation: 20,
+  },
+  logoWrapper: {
+    marginBottom: 20,
+    shadowColor: "#FF007F",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  logoContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.4)",
+    marginTop: 6,
+    marginBottom: 35,
+    textAlign: "center",
+  },
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    borderRadius: 18,
+    padding: 6,
+    width: "100%",
+    marginBottom: 35,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: "row",
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 14,
+  },
+  tabActive: {
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+  },
+  tabText: {
+    color: "rgba(255, 255, 255, 0.4)",
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  tabTextActive: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+  },
+  inputGroup: {
+    width: "100%",
+    marginBottom: 20,
+  },
+  label: {
+    color: "rgba(255, 255, 255, 0.5)",
+    fontSize: 13,
+    marginBottom: 10,
+    marginLeft: 4,
+    fontWeight: "500",
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.25)",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    paddingHorizontal: 18,
+    height: 56,
+  },
+  input: {
+    flex: 1,
+    color: "#FFFFFF",
+    fontSize: 15,
+    marginLeft: 12,
+    height: "100%",
+    backgroundColor: "transparent", // KHẮC PHỤC dải trắng
+  },
+  mainButtonWrapper: {
+    width: "100%",
+    marginTop: 15,
+    shadowColor: "#FF007F",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  mainButton: {
+    height: 58,
+    borderRadius: 18,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "bold",
+    letterSpacing: 0.5,
+  },
+});
