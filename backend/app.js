@@ -3,6 +3,7 @@ import express from "express";
 import AuthRoute from "./routes/AuthRoute.js";
 import DeletedRoute from "./routes/DeletedRoute.js";
 import searchRoute from "./routes/SearchRoute.js";
+import NoteRoute from "./routes/NoteRoute.js";
 dotenv.config();
 
 const app = express();
