@@ -1,8 +1,33 @@
-import Navigation from "./navigation/Navigation";
+import React from 'react';
+
+import { NavigationContainer } from '@react-navigation/native';
+
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import Home from './screens/home/Home';
+import Profile from './screens/profile/Profile';
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
 
   return (
-    <Navigation />
+    <NavigationContainer>
+
+      <Stack.Navigator>
+
+        <Stack.Screen
+          name="Home"
+          component={Home}
+        />
+
+        <Stack.Screen
+          name="Profile"
+          component={Profile}
+        />
+
+      </Stack.Navigator>
+
+    </NavigationContainer>
   );
 }
