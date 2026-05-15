@@ -1,226 +1,160 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  StatusBar,
-  Switch,
-  FlatList,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import Icon from "react-native-vector-icons/Ionicons";
-import { styles } from "./HomeStyle";
+import React from 'react';
+import { Text, View } from 'react-native';
 
-const Home = ({ navigation }) => {
-  const [isEnabled, setIsEnabled] = useState(true);
-  const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
-
-  // Dữ liệu mẫu dựa trên image_bf2c9e.jpg
-  const notes = [
-    {
-      id: "1",
-      title: "Danh sách mua sắm",
-      content: "Sữa, bánh mì, trứng, rau củ tươi, nước ép cam, bơ",
-      date: "2026-05-10",
-      type: "Riêng tư",
-      color: "#FFD54F", // Vàng
-      pinned: true,
-    },
-    {
-      id: "2",
-      title: "Ý tưởng dự án",
-      content: "Tạo ứng dụng quản lý công việc với AI hỗ trợ",
-      date: "2026-05-09",
-      type: "Công khai",
-      color: "#81D4FA", // Xanh dương
-      pinned: false,
-    },
-    {
-      id: "3",
-      title: "Mục tiêu tháng 5",
-      content: "Hoàn thành khóa học React, tập thể dục 3 lần/",
-      date: "2026-05-01",
-      type: "Riêng tư",
-      color: "#80CBC4", // Xanh lá
-      pinned: false,
-    },
-  ];
-
-  const renderNoteCard = ({ item }) => (
-    <View style={[styles.noteCard, { backgroundColor: item.color }]}>
-      <View style={styles.cardHeader}>
-        <View style={styles.typeBadge}>
-          <Icon
-            name={item.type === "Riêng tư" ? "lock-closed" : "earth"}
-            size={12}
-            color="#444"
-          />
-          <Text style={styles.typeText}>{item.type}</Text>
-        </View>
-        <View style={styles.actionIcons}>
-          <TouchableOpacity style={styles.iconCircle}>
-            <Icon name="pin" size={14} color="#444" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.iconCircle, { backgroundColor: "#ff5252" }]}
-          >
-            <Icon name="trash" size={14} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <Text style={styles.noteTitle} numberOfLines={1}>
-        {item.title}
-      </Text>
-      <Text style={styles.noteContent} numberOfLines={3}>
-        {item.content}
-      </Text>
-
-      <View style={styles.cardFooter}>
-        <Text style={styles.noteDate}>{item.date}</Text>
-        <Text style={styles.detailText}>Nhấn để xem chi tiết</Text>
-      </View>
+const Home = () => (
+    <View>
+        <Text>Home</Text>
     </View>
-  );
-
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      <SafeAreaView style={{ flex: 1 }}>
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View style={styles.userInfo}>
-            <LinearGradient
-              colors={["#FF007F", "#BD00FF"]}
-              style={styles.avatar}
-            >
-              <Icon name="sparkles" size={20} color="#fff" />
-            </LinearGradient>
-            <View style={{ marginLeft: 12 }}>
-              <Text style={styles.appName}>Notes</Text>
-              <Text style={styles.userEmail}>huyhoang092005@gmail.co</Text>
-            </View>
-          </View>
-          <Switch
-            trackColor={{ false: "#3e3e3e", true: "#BD00FF" }}
-            thumbColor={isEnabled ? "#fff" : "#f4f3f4"}
-            onValueChange={toggleSwitch}
-            value={isEnabled}
-          />
-        </View>
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
-        >
-          {/* My Notes Title & New Button */}
-          <View style={styles.titleSection}>
-            <View>
-              <Text style={styles.mainTitle}>Ghi chú của tôi</Text>
-              <Text style={styles.statsText}>✨ 3 ghi chú · 0 đã ghim</Text>
-            </View>
-            <TouchableOpacity style={styles.btnCreateWrapper}>
-              <LinearGradient
-                colors={["#FF007F", "#BD00FF"]}
-                style={styles.btnCreate}
-              >
-                <Icon name="add" size={20} color="#fff" />
-                <Text style={styles.btnCreateText}>Tạo mới</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-
-          {/* Search Bar */}
-          <View style={styles.searchBar}>
-            <Icon
-              name="search-outline"
-              size={20}
-              color="rgba(255,255,255,0.4)"
-            />
-            <TextInput
-              placeholder="Tìm theo tiêu đề..."
-              placeholderTextColor="rgba(255,255,255,0.3)"
-              style={styles.searchInput}
-            />
-          </View>
-
-          {/* Notes Grid */}
-          <FlatList
-            data={notes}
-            renderItem={renderNoteCard}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            scrollEnabled={false}
-            columnWrapperStyle={{
-              justifyContent: "space-between",
-              paddingHorizontal: 20,
-            }}
-          />
-        </ScrollView>
-
-        {/* Bottom Navigation (Static) */}
-        <View style={styles.bottomTab}>
-          {/* Nút Ghi chú (Đang ở trang này) */}
-          <TouchableOpacity style={[styles.tabItem, styles.tabItemActive]}>
-            <Icon name="document" size={22} color="#fff" />
-            <Text style={[styles.tabLabel, { color: "#fff" }]}>Ghi chú</Text>
-          </TouchableOpacity>
-
-          {/* 2. Gắn sự kiện onPress cho nút Chia sẻ */}
-          <TouchableOpacity
-            style={styles.tabItem}
-            onPress={() => navigation.navigate("Shared")} // Chuyển sang trang Shared
-          >
-            <Icon
-              name="share-social-outline"
-              size={22}
-              color="rgba(255,255,255,0.4)"
-            />
-            <Text style={styles.tabLabel}>Chia sẻ</Text>
-          </TouchableOpacity>
-
-          {/* Các nút khác giữ nguyên */}
-          <TouchableOpacity style={styles.tabItem}>
-            <Icon
-              name="trash-outline"
-              size={22}
-              color="rgba(255,255,255,0.4)"
-            />
-            <Text style={styles.tabLabel}>Thùng rác</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tabItem}>
-            <Icon
-              name="person-outline"
-              size={22}
-              color="rgba(255,255,255,0.4)"
-            />
-            <Text style={styles.tabLabel}>Cá nhân</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    </View>
-  );
-};
-
-const TabItem = ({ icon, label, active }) => (
-  <TouchableOpacity style={[styles.tabItem, active && styles.tabItemActive]}>
-    <Icon
-      name={icon}
-      size={22}
-      color={active ? "#fff" : "rgba(255,255,255,0.4)"}
-    />
-    <Text
-      style={[
-        styles.tabLabel,
-        { color: active ? "#fff" : "rgba(255,255,255,0.4)" },
-      ]}
-    >
-      {label}
-    </Text>
-  </TouchableOpacity>
 );
 
 export default Home;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+    paddingHorizontal: 20,
+    paddingTop: 50,
+  },
+
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  welcome: {
+    color: '#94a3b8',
+    fontSize: 16,
+  },
+
+  username: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginTop: 5,
+  },
+
+  avatar: {
+    width: 55,
+    height: 55,
+    borderRadius: 30,
+  },
+
+  searchBox: {
+    backgroundColor: '#1e293b',
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    marginTop: 25,
+  },
+
+  input: {
+    color: '#fff',
+    height: 50,
+  },
+
+  banner: {
+    backgroundColor: '#3b82f6',
+    borderRadius: 25,
+    padding: 25,
+    marginTop: 25,
+  },
+
+  bannerTitle: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+
+  bannerText: {
+    color: '#e0e7ff',
+    marginTop: 10,
+    lineHeight: 22,
+  },
+
+  bannerButton: {
+    backgroundColor: '#fff',
+    marginTop: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    width: 140,
+    alignItems: 'center',
+  },
+
+  bannerButtonText: {
+    color: '#2563eb',
+    fontWeight: 'bold',
+  },
+
+  sectionTitle: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginTop: 30,
+    marginBottom: 15,
+  },
+
+  cardContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+
+  card: {
+    backgroundColor: '#1e293b',
+    width: '48%',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 15,
+  },
+
+  cardIcon: {
+    fontSize: 30,
+  },
+
+  cardTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 15,
+  },
+
+  cardDesc: {
+    color: '#94a3b8',
+    marginTop: 5,
+  },
+
+  task: {
+    backgroundColor: '#1e293b',
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  taskTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+  taskTime: {
+    color: '#94a3b8',
+    marginTop: 5,
+  },
+
+  status: {
+    backgroundColor: '#f59e0b',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+
+  statusText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+});
