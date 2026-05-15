@@ -1,5 +1,28 @@
 const connection = require('../config/database');
 
+async function GetNote(id) {
+    const [notes] = await connection.query('SELECT * FROM notes WHERE id = ?', [id]);
+    // Vì kết quả trả về là một mảng, nên ta lấy phần tử đầu tiên [0]
+    return notes[0]; 
+}
+
+async function GetAllNotes(userId) {
+    const [notes] = await connection.query(
+        'SELECT * FROM notes WHERE user_id = ? ORDER BY is_pinned DESC, id DESC', 
+        [userId]
+    );
+    return notes;
+}
+
+async function TogglePinNote(id, isPinned) {
+    // isPinned sẽ nhận giá trị 1 (ghim) hoặc 0 (bỏ ghim)
+    const [nodes] = await connection.query(
+        'UPDATE notes SET is_pinned = ? WHERE id = ?',
+        [isPinned, id]
+    );
+    return nodes;
+}
+
 async function SearchNotes(query) {
     const [notes] = await connection.query('SELECT * FROM notes WHERE title LIKE ?', [`%${query}%`]);
     return notes;
@@ -24,92 +47,14 @@ async function EditNote(id, title, content) {
         [title, content, id]
     );
     return notes;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}   
 
 module.exports = {
+    GetNote,
+    GetAllNotes,
+    TogglePinNote,
     SearchNotes,
-    DeleteNote
+    DeleteNote,
+    CreateNote,
+    EditNote
 };
