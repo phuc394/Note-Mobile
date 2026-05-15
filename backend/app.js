@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import express from "express";
-import NoteRoute from "./routes/NoteRoute.js";
+import AuthRoute from "./routes/AuthRoute.js";
 
 dotenv.config();
 
@@ -9,6 +9,10 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/api/v1/notes', NoteRoute);
+
+
+
+// Use routes
+app.use('/auth', AuthRoute);
 
 export default app;
