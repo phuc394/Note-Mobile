@@ -1,6 +1,6 @@
-const NoteService = require('../services/NoteService');
+import * as NoteService from '../services/NoteService.js';
 
-async function GetNote(req, res) {
+export async function GetNote(req, res) {
     try {
         const { id } = req.params; // Lấy id từ đường dẫn /get/:id
         const note = await NoteService.GetNote(id);
@@ -15,7 +15,7 @@ async function GetNote(req, res) {
     }
 }
 
-async function GetAllNotes(req, res) {
+export async function GetAllNotes(req, res) {
     try {
         const { user_id } = req.params; // Lấy user_id từ URL
         const notes = await NoteService.GetAllNotes(user_id);
@@ -25,7 +25,7 @@ async function GetAllNotes(req, res) {
     }
 }
 
-async function TogglePinNote(req, res) {
+export async function TogglePinNote(req, res) {
     try {
         const { id } = req.params;
         const { is_pinned } = req.body; // Frontend gửi lên 1 hoặc 0
@@ -39,38 +39,44 @@ async function TogglePinNote(req, res) {
     }
 }
 
-async function SearchNotes(req, res) {
-    const { query } = req.params;
-    const notes = await NoteService.SearchNotes(query);
-    res.json(notes);
+export async function SearchNotes(req, res) {
+    try {
+        const { query } = req.params;
+        const notes = await NoteService.SearchNotes(query);
+        res.json(notes);
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi khi tìm ghi chú", error });
+    }
 }
 
-async function DeleteNote(req, res) {
-    const { id } = req.params;
-    const notes = await NoteService.DeleteNote(id);
-    res.json(notes);
+export async function DeleteNote(req, res) {
+    try {
+        const { id } = req.params;
+        const notes = await NoteService.DeleteNote(id);
+        res.json(notes);
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi khi xóa ghi chú", error });
+    }
 }
 
-async function CreateNote(req, res) {
-    const { title, content, user_id } = req.body; 
-    const notes = await NoteService.CreateNote(title, content, user_id);
-    res.json(notes);
+export async function CreateNote(req, res) {
+    try {
+        const { title, content, user_id } = req.body; 
+        const notes = await NoteService.CreateNote(title, content, user_id);
+        res.json(notes);
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi khi tạo ghi chú", error });
+    }
 }
 
-async function EditNote(req, res) {
-    const { id } = req.params;
-    const { title, content } = req.body;
-    
-    const notes = await NoteService.EditNote(id, title, content);
-    res.json(notes);
-}
+export async function EditNote(req, res) {
+    try {
+        const { id } = req.params;
+        const { title, content } = req.body;
 
-module.exports = {
-    CreateNote,
-    EditNote,
-    SearchNotes,
-    DeleteNote,
-    GetNote,
-    GetAllNotes,
-    TogglePinNote
-};
+        const notes = await NoteService.EditNote(id, title, content);
+        res.json(notes);
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi khi cập nhật ghi chú", error });
+    }
+}

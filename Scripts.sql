@@ -14,6 +14,8 @@ CREATE TABLE users (
     INDEX idx_username (username)
 );
 
+
+
 -- 2. Bảng Notes: Lưu trữ thông tin ghi chú
 CREATE TABLE notes (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -44,4 +46,8 @@ CREATE TABLE shared_notes (
     INDEX idx_invited_gmail (invited_gmail),
     INDEX idx_note_id (note_id)
 );
+
+INSERT INTO notes (title, content, user_id) VALUES
+('Ghi chú công việc hôm nay', 'Hoàn thành báo cáo tuần, họp nhóm lúc 14h, gửi email cho khách hàng', 1),
+('Công thức nấu ăn', 'Phở bò: Xương ống, thịt bò, hành, gừng, quế, hồi, thảo quả. Ninh nhừ xương trong 3-4 tiếng.', 1);
 
