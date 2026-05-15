@@ -119,6 +119,9 @@ VALUES
 ('Todo hôm nay', 
  'Code chức năng search, sửa lỗi API, push code lên GitHub bằng pull request.', 
  5, 0, 1, 0, NULL);
+
+
+ 
  INSERT INTO shared_notes 
 (note_id, invited_gmail, can_edit) 
 VALUES
