@@ -2,99 +2,101 @@ import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import connection from '../config/database.js';
 
+const db = connection.promise();
+
 // Register a new user
 export async function register(username, email, password) {
-  return new Promise((resolve, reject) => {
-    // Check if user already exists
-    connection.query(
-      'SELECT * FROM users WHERE username = ? OR gmail = ?',
-      [username, email],
-      async (err, results) => {
-        if (err) return reject(err);
+  // Check if user already exists
+  const [existingUsers] = await db.query(
+    'SELECT * FROM users WHERE username = ? OR gmail = ?',
+    [username, email]
+  );
 
-        if (results.length > 0) {
-          return reject(new Error('Username or email already exists'));
-        }
+  if (existingUsers.length > 0) {
+    throw new Error('Username or email already exists');
+  }
 
-        // Hash password
-        const hashedPassword = await bcryptjs.hash(password, 10);
+  // Hash password
+  const hashedPassword = await bcryptjs.hash(password, 10);
 
-        // Insert new user
-        connection.query(
-          'INSERT INTO users (username, gmail, password_hash) VALUES (?, ?, ?)',
-          [username, email, hashedPassword],
-          (err, results) => {
-            if (err) return reject(err);
-            resolve({
-              id: results.insertId,
-              username,
-              email,
-            });
-          }
-        );
-      }
-    );
-  });
+  // Insert new user
+  const [result] = await db.query(
+    'INSERT INTO users (username, gmail, password_hash) VALUES (?, ?, ?)',
+    [username, email, hashedPassword]
+  );
+
+  return {
+    id: result.insertId,
+    username,
+    email,
+  };
 }
 
 // Login user
 export async function login(identifier, password) {
-  return new Promise((resolve, reject) => {
-    // Identifier can be username or email
-    connection.query(
-      'SELECT * FROM users WHERE username = ? OR gmail = ?',
-      [identifier, identifier],
-      async (err, results) => {
-        if (err) return reject(err);
+  // Identifier can be username or email
+  const [results] = await db.query(
+    'SELECT * FROM users WHERE username = ? OR gmail = ?',
+    [identifier, identifier]
+  );
 
-        if (results.length === 0) {
-          return reject(new Error('Invalid username/email or password'));
-        }
+  if (results.length === 0) {
+    throw new Error('Invalid username/email or password');
+  }
 
-        const user = results[0];
+  const user = results[0];
 
-        // Compare password
-        const isPasswordValid = await bcryptjs.compare(password, user.password_hash);
+  // Compare password
+  const isPasswordValid = await bcryptjs.compare(password, user.password_hash);
 
-        if (!isPasswordValid) {
-          return reject(new Error('Invalid username/email or password'));
-        }
+  if (!isPasswordValid) {
+    throw new Error('Invalid username/email or password');
+  }
 
-        // Generate JWT token
-        const token = jwt.sign(
-          { id: user.id, username: user.username, email: user.gmail },
-          process.env.JWT_SECRET,
-          { expiresIn: process.env.JWT_EXPIRE }
-        );
+  // Generate JWT token
+  const token = jwt.sign(
+    { id: user.id, username: user.username, email: user.gmail },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRE }
+  );
 
-        resolve({
-          token,
-          user: {
-            id: user.id,
-            username: user.username,
-            email: user.gmail,
-          },
-        });
-      }
-    );
-  });
+  return {
+    token,
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.gmail,
+    },
+  };
+}
+
+export async function logOut() {
+  // In a stateless JWT architecture, the server doesn't maintain session state.
+  // Logout is primarily handled on the client side by discarding the token.
+  // This function returns a success message to confirm the logout process 
+  // can proceed on the client.
+  return { success: true, message: 'Logged out successfully' };
 }
 
 // Get user by ID
 export async function getUserById(userId) {
-  return new Promise((resolve, reject) => {
-    connection.query(
-      'SELECT id, username, gmail, full_name, created_at FROM users WHERE id = ?',
-      [userId],
-      (err, results) => {
-        if (err) return reject(err);
-        if (results.length === 0) {
-          return reject(new Error('User not found'));
-        }
-        resolve(results[0]);
-      }
-    );
-  });
+  const [results] = await db.query(
+    'SELECT id, username, email, created_at FROM users WHERE id = ?',
+    [userId]
+  );
+
+  if (results.length === 0) {
+    throw new Error('User not found');
+  }
+  return results[0];
+}
+
+export async function updateUser(userId, username, email) {
+  const [results] = await db.query(
+    'UPDATE users SET username = ?, email = ? WHERE id = ?',
+    [username, email, userId]
+  );
+  return results;
 }
 
 // Verify JWT token

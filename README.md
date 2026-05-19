@@ -6,4 +6,4 @@ Note-Mobile là một ứng dụng di động giúp người dùng có thể t�
 
 - Frontend: React Native
 - Backend: ExpressJS
-- Database: SQLite
+- Database: MySQL

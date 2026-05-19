@@ -79,3 +79,31 @@ export async function getProfile(req, res) {
     });
   }
 }
+
+export async function updateProfile(req, res) {
+  try {
+    const userId = req.user.id;
+    const { username, email } = req.body;
+    const updatedUser = await AuthService.updateProfile(userId, username, email);
+
+    return res.status(200).json({
+      message: 'User profile updated successfully',
+      user: updatedUser,
+    });
+  } catch (error) {
+    return res.status(404).json({
+      message: error.message || 'User not found',
+    });
+  }
+}
+
+export async function logOut(req, res) {
+  try {
+    const result = await AuthService.logOut();
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || 'Logout failed',
+    });
+  }
+}
