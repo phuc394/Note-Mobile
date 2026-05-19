@@ -19,9 +19,9 @@ const AppNavigator = () => {
         animation: "fade_from_bottom", // Hiệu ứng chuyển trang mượt mà
       }}
     >
-      {/* Auth Group
+      {/* Auth Group */}
       <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Register" component={RegisterScreen} /> */}
+      <Stack.Screen name="Register" component={RegisterScreen} />
 
       {/* Main App Group */}
       <Stack.Screen name="Home" component={HomeScreen} />

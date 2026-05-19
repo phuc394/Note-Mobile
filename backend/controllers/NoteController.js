@@ -39,15 +39,31 @@ export async function TogglePinNote(req, res) {
     }
 }
 
-export async function SearchNotes(req, res) {
-    try {
-        const { query } = req.params;
-        const notes = await NoteService.SearchNotes(query);
-        res.json(notes);
-    } catch (error) {
-        res.status(500).json({ message: "Lỗi khi tìm ghi chú", error });
+export async function searchNotes(req, res) {
+  try {
+    const { keyword } = req.query;
+
+    if (!keyword || keyword.trim() === "") {
+      return res.status(400).json({
+        message: "Vui lòng nhập từ khóa tìm kiếm",
+        data: [],
+      });
     }
-}
+    const userId = req.user.id;
+
+    const notes = await searchService.searchNotes(userId, keyword);
+
+    return res.status(200).json({
+      message: "Tìm kiếm ghi chú thành công",
+      data: notes,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Lỗi server khi tìm kiếm ghi chú",
+      error: error.message,
+    });
+  }
+};
 
 export async function DeleteNote(req, res) {
     try {
@@ -61,7 +77,8 @@ export async function DeleteNote(req, res) {
 
 export async function CreateNote(req, res) {
     try {
-        const { title, content, user_id } = req.body; 
+        const { user_id } = req.body; // Lấy user_id từ body
+        const { title, content } = req.body; 
         const notes = await NoteService.CreateNote(title, content, user_id);
         res.json(notes);
     } catch (error) {
