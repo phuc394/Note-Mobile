@@ -1,99 +1,175 @@
 import * as NoteService from '../services/NoteService.js';
 
+function handleError(res, error, fallbackMessage = 'Loi Server') {
+  return res.status(error.statusCode ?? 500).json({
+    message: error.message || fallbackMessage,
+  });
+}
+
+function toBoolean(value) {
+  return value === true || value === 1 || value === '1' || value === 'true';
+}
+
 export async function GetNote(req, res) {
-    try {
-        const { id } = req.params; // Lấy id từ đường dẫn /get/:id
-        const note = await NoteService.GetNote(id);
-        
-        if (note) {
-            res.status(200).json(note);
-        } else {
-            res.status(404).json({ message: "Không tìm thấy ghi chú này" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "Lỗi Server", error });
-    }
+  try {
+    const { id } = req.params;
+    const note = await NoteService.GetNote(id, req.user.id);
+    return res.status(200).json(note);
+  } catch (error) {
+    return handleError(res, error, 'Loi khi lay chi tiet ghi chu');
+  }
 }
 
 export async function GetAllNotes(req, res) {
-    try {
-        const { user_id } = req.params; // Lấy user_id từ URL
-        const notes = await NoteService.GetAllNotes(user_id);
-        res.status(200).json(notes);
-    } catch (error) {
-        res.status(500).json({ message: "Lỗi khi lấy danh sách ghi chú", error });
-    }
+  try {
+    const notes = await NoteService.GetAllNotes(req.user.id);
+    return res.status(200).json(notes);
+  } catch (error) {
+    return handleError(res, error, 'Loi khi lay danh sach ghi chu');
+  }
+}
+
+export async function GetSharedNotes(req, res) {
+  try {
+    const notes = await NoteService.GetSharedNotes(req.user.id);
+    return res.status(200).json(notes);
+  } catch (error) {
+    return handleError(res, error, 'Loi khi lay danh sach ghi chu duoc chia se');
+  }
 }
 
 export async function TogglePinNote(req, res) {
-    try {
-        const { id } = req.params;
-        const { is_pinned } = req.body; // Frontend gửi lên 1 hoặc 0
-        
-        await NoteService.TogglePinNote(id, is_pinned);
-        res.status(200).json({ 
-            message: is_pinned ? "Đã ghim ghi chú" : "Đã bỏ ghim ghi chú" 
-        });
-    } catch (error) {
-        res.status(500).json({ message: "Lỗi khi cập nhật trạng thái ghim", error });
-    }
+  try {
+    const { id } = req.params;
+    const { is_pinned } = req.body;
+
+    await NoteService.TogglePinNote(id, req.user.id, is_pinned);
+    return res.status(200).json({
+      message: toBoolean(is_pinned) ? 'Da ghim ghi chu' : 'Da bo ghim ghi chu',
+    });
+  } catch (error) {
+    return handleError(res, error, 'Loi khi cap nhat trang thai ghim');
+  }
+}
+
+export async function TogglePublicNote(req, res) {
+  try {
+    const { id } = req.params;
+    const { is_public } = req.body;
+
+    await NoteService.TogglePublicNote(id, req.user.id, is_public);
+    return res.status(200).json({
+      message: toBoolean(is_public)
+        ? 'Da bat public cho ghi chu'
+        : 'Da chuyen ghi chu ve private va xoa tat ca loi moi',
+    });
+  } catch (error) {
+    return handleError(res, error, 'Loi khi cap nhat trang thai public/private');
+  }
+}
+
+export async function InviteUserToNote(req, res) {
+  try {
+    const { id } = req.params;
+    const { email, invited_gmail, can_edit } = req.body;
+    const invite = await NoteService.InviteUserToNote(
+      id,
+      req.user.id,
+      email ?? invited_gmail,
+      can_edit,
+    );
+
+    return res.status(201).json({
+      message: 'Da gui loi moi thanh cong',
+      invite,
+    });
+  } catch (error) {
+    return handleError(res, error, 'Loi khi moi nguoi dung vao ghi chu');
+  }
+}
+
+export async function UpdateInvitePermission(req, res) {
+  try {
+    const { id } = req.params;
+    const { email, invited_gmail, can_edit } = req.body;
+    await NoteService.UpdateInvitePermission(
+      id,
+      req.user.id,
+      email ?? invited_gmail,
+      can_edit,
+    );
+
+    return res.status(200).json({
+      message: 'Da cap nhat quyen cua nguoi duoc moi',
+    });
+  } catch (error) {
+    return handleError(res, error, 'Loi khi cap nhat quyen chia se');
+  }
+}
+
+export async function RemoveInvite(req, res) {
+  try {
+    const { id } = req.params;
+    const { email } = req.params;
+    await NoteService.RemoveInvite(id, req.user.id, email);
+    return res.status(200).json({ message: 'Da xoa quyen truy cap ghi chu' });
+  } catch (error) {
+    return handleError(res, error, 'Loi khi xoa quyen chia se');
+  }
 }
 
 export async function searchNotes(req, res) {
   try {
     const { keyword } = req.query;
 
-    if (!keyword || keyword.trim() === "") {
+    if (!keyword || keyword.trim() === '') {
       return res.status(400).json({
-        message: "Vui lòng nhập từ khóa tìm kiếm",
+        message: 'Vui long nhap tu khoa tim kiem',
         data: [],
       });
     }
-    const userId = req.user.id;
 
-    const notes = await searchService.searchNotes(userId, keyword);
-
+    const notes = await NoteService.searchNotes(req.user.id, keyword);
     return res.status(200).json({
-      message: "Tìm kiếm ghi chú thành công",
+      message: 'Tim kiem ghi chu thanh cong',
       data: notes,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Lỗi server khi tìm kiếm ghi chú",
-      error: error.message,
-    });
+    return handleError(res, error, 'Loi server khi tim kiem ghi chu');
   }
-};
+}
 
 export async function DeleteNote(req, res) {
-    try {
-        const { id } = req.params;
-        const notes = await NoteService.DeleteNote(id);
-        res.json(notes);
-    } catch (error) {
-        res.status(500).json({ message: "Lỗi khi xóa ghi chú", error });
-    }
+  try {
+    const { id } = req.params;
+    await NoteService.DeleteNote(id, req.user.id);
+    return res.status(200).json({ message: 'Da xoa ghi chu' });
+  } catch (error) {
+    return handleError(res, error, 'Loi khi xoa ghi chu');
+  }
 }
 
 export async function CreateNote(req, res) {
-    try {
-        const { user_id } = req.body; // Lấy user_id từ body
-        const { title, content } = req.body; 
-        const notes = await NoteService.CreateNote(title, content, user_id);
-        res.json(notes);
-    } catch (error) {
-        res.status(500).json({ message: "Lỗi khi tạo ghi chú", error });
-    }
+  try {
+    const { title, content } = req.body;
+    const note = await NoteService.CreateNote(title, content, req.user.id);
+    return res.status(201).json({
+      message: 'Da tao ghi chu',
+      note,
+    });
+  } catch (error) {
+    return handleError(res, error, 'Loi khi tao ghi chu');
+  }
 }
 
 export async function EditNote(req, res) {
-    try {
-        const { id } = req.params;
-        const { title, content } = req.body;
+  try {
+    const { id } = req.params;
+    const { title, content } = req.body;
 
-        const notes = await NoteService.EditNote(id, title, content);
-        res.json(notes);
-    } catch (error) {
-        res.status(500).json({ message: "Lỗi khi cập nhật ghi chú", error });
-    }
+    await NoteService.EditNote(id, req.user.id, title, content);
+    return res.status(200).json({ message: 'Da cap nhat ghi chu' });
+  } catch (error) {
+    return handleError(res, error, 'Loi khi cap nhat ghi chu');
+  }
 }

@@ -3,6 +3,7 @@ import express from "express";
 import AuthRoute from "./routes/AuthRoute.js";
 import DeletedRoute from "./routes/DeletedRoute.js";
 import NoteRoute from "./routes/NoteRoute.js";
+import SharedRoute from "./routes/SharedRoute.js";
 dotenv.config();
 
 const app = express();
@@ -14,5 +15,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/v1/auth", AuthRoute);
 app.use("/api/v1/notes", NoteRoute);
 app.use("/api/v1/deleted", DeletedRoute);
+app.use("/api/v1/shared", SharedRoute);
 
 export default app;
