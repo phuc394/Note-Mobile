@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import handlebars from 'handlebars';
 import nodemailer from 'nodemailer';
+import { isProduction } from '../config/env.js';
 import connection from '../config/database.js';
 import { emitSharedNoteUpdated } from '../socket.js';
 
@@ -52,10 +53,24 @@ function toBoolean(value) {
   return value === true || value === 1 || value === '1' || value === 'true';
 }
 
+function getFrontendUrl() {
+  const frontendUrl = process.env.FRONTEND_URL ?? process.env.CLIENT_ORIGIN?.split(',')[0]?.trim();
+
+  if (frontendUrl) {
+    return frontendUrl;
+  }
+
+  if (isProduction) {
+    throw new Error('FRONTEND_URL or CLIENT_ORIGIN is required to send invite emails');
+  }
+
+  return 'http://localhost:3000';
+}
+
 async function sendInviteEmail({ invitedEmail, note, inviter, canEdit }) {
   const source = await fs.readFile(inviteTemplatePath, 'utf8');
   const template = handlebars.compile(source);
-  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+  const frontendUrl = getFrontendUrl();
   const inviteUrl = `${frontendUrl.replace(/\/$/, '')}/notes/${note.id}`;
   const html = template({
     inviteUrl,
