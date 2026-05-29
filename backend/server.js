@@ -1,15 +1,20 @@
 import http from 'http';
 import jwt from 'jsonwebtoken';
 import { Server } from 'socket.io';
+import { socketCorsOrigin } from './config/cors.js';
+import { validateEnv } from './config/env.js';
 import app from './app.js';
 import { setSocketServer } from './socket.js';
 import { getSharedNoteAccess } from './services/SharedService.js';
+
+validateEnv();
 
 const port = Number(process.env.PORT ?? 3000);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_ORIGIN ?? '*',
+    origin: socketCorsOrigin,
+    methods: ['GET', 'POST'],
   },
 });
 

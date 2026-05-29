@@ -8,7 +8,7 @@ const db = connection.promise();
 export async function register(username, email, password) {
   // Check if user already exists
   const [existingUsers] = await db.query(
-    'SELECT * FROM users WHERE username = ? OR gmail = ?',
+    'SELECT * FROM users WHERE username = ? OR email = ?',
     [username, email]
   );
 
@@ -21,7 +21,7 @@ export async function register(username, email, password) {
 
   // Insert new user
   const [result] = await db.query(
-    'INSERT INTO users (username, gmail, password_hash) VALUES (?, ?, ?)',
+    'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
     [username, email, hashedPassword]
   );
 
@@ -36,7 +36,7 @@ export async function register(username, email, password) {
 export async function login(identifier, password) {
   // Identifier can be username or email
   const [results] = await db.query(
-    'SELECT * FROM users WHERE username = ? OR gmail = ?',
+    'SELECT * FROM users WHERE username = ? OR email = ?',
     [identifier, identifier]
   );
 
@@ -55,7 +55,7 @@ export async function login(identifier, password) {
 
   // Generate JWT token
   const token = jwt.sign(
-    { id: user.id, username: user.username, email: user.gmail },
+    { id: user.id, username: user.username, email: user.email },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRE }
   );
@@ -65,7 +65,7 @@ export async function login(identifier, password) {
     user: {
       id: user.id,
       username: user.username,
-      email: user.gmail,
+      email: user.email,
     },
   };
 }
@@ -91,12 +91,30 @@ export async function getUserById(userId) {
   return results[0];
 }
 
-export async function updateUser(userId, username, email) {
-  const [results] = await db.query(
-    'UPDATE users SET username = ?, email = ? WHERE id = ?',
-    [username, email, userId]
+export async function updateProfile(userId, username, email) {
+  const currentUser = await getUserById(userId);
+  const nextUsername = username?.trim() || currentUser.username;
+  const nextEmail = email?.trim() || currentUser.email;
+
+  const [existingUsers] = await db.query(
+    'SELECT id FROM users WHERE (username = ? OR email = ?) AND id <> ?',
+    [nextUsername, nextEmail, userId]
   );
-  return results;
+
+  if (existingUsers.length > 0) {
+    throw new Error('Username or email already exists');
+  }
+
+  await db.query(
+    'UPDATE users SET username = ?, email = ? WHERE id = ?',
+    [nextUsername, nextEmail, userId]
+  );
+
+  return getUserById(userId);
+}
+
+export async function updateUser(userId, username, email) {
+  return updateProfile(userId, username, email);
 }
 
 // Verify JWT token
