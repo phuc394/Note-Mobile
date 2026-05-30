@@ -2,194 +2,151 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
-  Image,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
+  SafeAreaView,
+  StatusBar,
+  Modal,
+  Pressable,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import Icon from "react-native-vector-icons/Ionicons";
+import { styles } from "./ProfileStyle";
+import { useAppTheme } from "../../theme/AppTheme";
+import AppHeader from "../../components/AppHeader";
+import AppBottomTab from "../../components/AppBottomTab";
 
 const Profile = ({ navigation }) => {
+  const { colors, isDark, toggleTheme } = useAppTheme();
   const [isEdit, setIsEdit] = useState(false);
-
-  const [name, setName] = useState("Kiệt Lưu");
-  const [email, setEmail] = useState("kietluu@gmail.com");
-  const [phone, setPhone] = useState("0987654321");
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [name, setName] = useState("Người dùng Demo");
+  const [email, setEmail] = useState("huyhoang092005@gmail.co");
 
   const handleSave = () => {
     setIsEdit(false);
+  };
 
-    Alert.alert("Success", "Profile updated successfully");
+  const handleLogout = () => {
+    setShowLogoutModal(false);
+    setIsEdit(false);
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Profile</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+      <SafeAreaView style={{ flex: 1 }}>
+        <AppHeader navigation={navigation} />
 
-        <TouchableOpacity
-          style={styles.editBtn}
-          onPress={() => setIsEdit(!isEdit)}
-        >
-          <Text style={styles.editText}>{isEdit ? "Cancel" : "Edit"}</Text>
-        </TouchableOpacity>
-      </View>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+          <Text style={[styles.pageLabel, { color: colors.textMuted }]}>Hồ sơ</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Thông tin tài khoản</Text>
 
-      {/* Avatar */}
-      <View style={styles.avatarContainer}>
-        <Image
-          source={{
-            uri: "https://i.pravatar.cc/150?img=12",
-          }}
-          style={styles.avatar}
-        />
+          <View
+            style={[
+              styles.profileCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                shadowColor: colors.shadow,
+              },
+            ]}
+          >
+            <View style={styles.profileTop}>
+              <LinearGradient colors={colors.logoGradient} style={styles.avatarWrap}>
+                <Icon name="person-outline" size={34} color={colors.onPrimary} />
+              </LinearGradient>
 
-        <Text style={styles.username}>{name}</Text>
+              <View style={{ flex: 1 }}>
+                <View style={styles.nameRow}>
+                  <Text style={[styles.username, { color: colors.textPrimary }]}>{name}</Text>
+                  <TouchableOpacity
+                    style={[styles.smallActionBtn, { backgroundColor: colors.surfaceSoft }]}
+                    onPress={() => setIsEdit((value) => !value)}
+                  >
+                    <Text style={[styles.smallActionText, { color: colors.textPrimary }]}> 
+                      {isEdit ? "Hủy" : "Sửa"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={[styles.useremail, { color: colors.textMuted }]}>{email}</Text>
+              </View>
+            </View>
 
-        <Text style={styles.useremail}>{email}</Text>
-      </View>
+            <View style={styles.form}>
+              <Field label="Tên hiển thị" icon="person-outline" value={name} onChangeText={setName} editable={isEdit} colors={colors} />
+              <Field label="Email" icon="mail-outline" value={email} onChangeText={setEmail} editable={isEdit} colors={colors} />
+              <Field label="Mật khẩu" icon="lock-closed-outline" value="******" editable={false} colors={colors} />
+              <Field label="Ngày tham gia" icon="calendar-outline" value="2025-01-15" editable={false} colors={colors} />
 
-      {/* Form */}
-      <View style={styles.form}>
-        {/* Name */}
-        <Text style={styles.label}>Full Name</Text>
+              {isEdit ? (
+                <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.85}>
+                  <LinearGradient colors={colors.buttonGradient} style={styles.saveGradient}>
+                    <Icon name="save-outline" size={18} color={colors.onPrimary} />
+                    <Text style={[styles.saveText, { color: colors.onPrimary }]}>Lưu thay đổi</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ) : null}
 
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          editable={isEdit}
-          style={[styles.input, !isEdit && styles.disabledInput]}
-        />
+              <TouchableOpacity
+                style={[styles.logoutBtn, { backgroundColor: colors.surfaceSoft }]}
+                onPress={() => setShowLogoutModal(true)}
+                activeOpacity={0.85}
+              >
+                <Text style={[styles.logoutText, { color: colors.textPrimary }]}>Đăng xuất</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
 
-        {/* Email */}
-        <Text style={styles.label}>Email</Text>
+        <AppBottomTab navigation={navigation} activeTab="Profile" />
 
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          editable={isEdit}
-          style={[styles.input, !isEdit && styles.disabledInput]}
-        />
+        <Modal transparent visible={showLogoutModal} animationType="fade" onRequestClose={() => setShowLogoutModal(false)}>
+          <Pressable style={styles.modalOverlay} onPress={() => setShowLogoutModal(false)}>
+            <Pressable style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => {}}>
+              <View style={[styles.modalIcon, { backgroundColor: colors.surfaceSoft }]}>
+                <Icon name="warning-outline" size={28} color={colors.primary} />
+              </View>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Xác nhận đăng xuất</Text>
+              <Text style={[styles.modalText, { color: colors.textMuted }]}>Bạn có chắc muốn đăng xuất khỏi tài khoản?</Text>
 
-        {/* Phone */}
-        <Text style={styles.label}>Phone</Text>
-
-        <TextInput
-          value={phone}
-          onChangeText={setPhone}
-          editable={isEdit}
-          keyboardType="phone-pad"
-          style={[styles.input, !isEdit && styles.disabledInput]}
-        />
-
-        {/* Save Button */}
-        {isEdit && (
-          <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-            <Text style={styles.saveText}>Save Changes</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </ScrollView>
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={[styles.modalCancel, { borderColor: colors.border }]} onPress={() => setShowLogoutModal(false)}>
+                  <Text style={[styles.modalCancelText, { color: colors.textPrimary }]}>Hủy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.modalConfirm, { backgroundColor: colors.primary }]} onPress={handleLogout}>
+                  <Text style={[styles.modalConfirmText, { color: colors.onPrimary }]}>Đăng xuất</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      </SafeAreaView>
+    </View>
   );
 };
 
+const Field = ({ label, icon, editable, colors, ...props }) => (
+  <View style={styles.fieldGroup}>
+    <Text style={[styles.label, { color: colors.textMuted }]}> 
+      <Icon name={icon} size={12} color={colors.textMuted} /> {label}
+    </Text>
+    <TextInput
+      {...props}
+      editable={editable}
+      style={[
+        styles.input,
+        {
+          backgroundColor: colors.inputBackground,
+          borderColor: colors.inputBorder,
+          color: colors.textPrimary,
+        },
+        !editable && styles.disabledInput,
+      ]}
+      placeholderTextColor={colors.textMuted}
+    />
+  </View>
+);
+
 export default Profile;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 20,
-    paddingTop: 50,
-  },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#111827",
-  },
-
-  editBtn: {
-    backgroundColor: "#8b5cf6",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
-
-  editText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-
-  avatarContainer: {
-    alignItems: "center",
-    marginTop: 30,
-  },
-
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-  },
-
-  username: {
-    marginTop: 15,
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#111827",
-  },
-
-  useremail: {
-    marginTop: 5,
-    fontSize: 16,
-    color: "#6b7280",
-  },
-
-  form: {
-    marginTop: 40,
-  },
-
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: 8,
-    marginTop: 20,
-  },
-
-  input: {
-    backgroundColor: "#f3f4f6",
-    borderRadius: 14,
-    paddingHorizontal: 15,
-    height: 55,
-    fontSize: 16,
-    color: "#111827",
-  },
-
-  disabledInput: {
-    opacity: 0.7,
-  },
-
-  saveBtn: {
-    backgroundColor: "#8b5cf6",
-    marginTop: 35,
-    height: 55,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  saveText: {
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "bold",
-  },
-});

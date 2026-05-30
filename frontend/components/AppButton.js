@@ -3,27 +3,34 @@ import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 // Bạn cần cài đặt expo-linear-gradient hoặc react-native-linear-gradient
 import { LinearGradient } from "expo-linear-gradient";
+import { useAppTheme } from "../theme/AppTheme";
 
-const AppButton = ({ title, icon, onPress }) => (
-  <TouchableOpacity onPress={onPress} style={styles.shadow}>
+const AppButton = ({ title, icon, onPress }) => {
+  const { colors } = useAppTheme();
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[styles.shadow, { shadowColor: colors.primary }]}
+    >
     <LinearGradient
-      colors={["#FF007F", "#BD00FF"]} // Chuyển màu hồng đến tím phát sáng
+      colors={colors.buttonGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.button}
     >
       {icon && (
-        <Icon name={icon} size={20} color="#FFFFFF" style={styles.icon} />
+        <Icon name={icon} size={20} color={colors.onPrimary} style={styles.icon} />
       )}
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, { color: colors.onPrimary }]}>{title}</Text>
     </LinearGradient>
-  </TouchableOpacity>
-);
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   shadow: {
     width: "100%",
-    shadowColor: "#BD00FF", // Màu phát sáng mờ
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.8,
     shadowRadius: 15,
@@ -42,7 +49,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   title: {
-    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "bold",
   },
