@@ -6,6 +6,7 @@ import LoginScreen from "../screens/auth/Logins/Login";
 import RegisterScreen from "../screens/auth/Registers/Register";
 import HomeScreen from "../screens/home/Home";
 import SharedScreen from "../screens/shared/Shared";
+import DeleteScreen from "../screens/delete/Delete";
 import Profile from "../screens/profile/Profile";
 
 const Stack = createNativeStackNavigator();
@@ -26,6 +27,7 @@ const AppNavigator = () => {
       {/* Main App Group */}
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Shared" component={SharedScreen} />
+      <Stack.Screen name="Delete" component={DeleteScreen} />
       <Stack.Screen name="Profile" component={Profile} />
     </Stack.Navigator>
   );

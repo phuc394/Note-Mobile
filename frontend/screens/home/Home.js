@@ -7,16 +7,17 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
-  Switch,
   FlatList,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
 import { styles } from "./HomeStyle";
+import { useAppTheme } from "../../theme/AppTheme";
+import AppHeader from "../../components/AppHeader";
+import AppBottomTab from "../../components/AppBottomTab";
 
 const Home = ({ navigation }) => {
-  const [isEnabled, setIsEnabled] = useState(true);
-  const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
+  const { colors, isDark, toggleTheme } = useAppTheme();
 
   // Dữ liệu mẫu dựa trên image_bf2c9e.jpg
   const notes = [
@@ -26,7 +27,7 @@ const Home = ({ navigation }) => {
       content: "Sữa, bánh mì, trứng, rau củ tươi, nước ép cam, bơ",
       date: "2026-05-10",
       type: "Riêng tư",
-      color: "#FFD54F", // Vàng
+      color: isDark ? "#2B2A4E" : "#E7CFA4",
       pinned: true,
     },
     {
@@ -35,7 +36,7 @@ const Home = ({ navigation }) => {
       content: "Tạo ứng dụng quản lý công việc với AI hỗ trợ",
       date: "2026-05-09",
       type: "Công khai",
-      color: "#81D4FA", // Xanh dương
+      color: isDark ? "#20364F" : "#C7D7E5",
       pinned: false,
     },
     {
@@ -44,7 +45,7 @@ const Home = ({ navigation }) => {
       content: "Hoàn thành khóa học React, tập thể dục 3 lần/",
       date: "2026-05-01",
       type: "Riêng tư",
-      color: "#80CBC4", // Xanh lá
+      color: isDark ? "#203F39" : "#CBD8C0",
       pinned: false,
     },
   ];
@@ -52,65 +53,45 @@ const Home = ({ navigation }) => {
   const renderNoteCard = ({ item }) => (
     <View style={[styles.noteCard, { backgroundColor: item.color }]}>
       <View style={styles.cardHeader}>
-        <View style={styles.typeBadge}>
+        <View style={[styles.typeBadge, { backgroundColor: colors.surfaceSoft }]}>
           <Icon
             name={item.type === "Riêng tư" ? "lock-closed" : "earth"}
             size={12}
-            color="#444"
+            color={colors.textPrimary}
           />
-          <Text style={styles.typeText}>{item.type}</Text>
+          <Text style={[styles.typeText, { color: colors.textSecondary }]}>{item.type}</Text>
         </View>
         <View style={styles.actionIcons}>
-          <TouchableOpacity style={styles.iconCircle}>
-            <Icon name="pin" size={14} color="#444" />
+          <TouchableOpacity style={[styles.iconCircle, { backgroundColor: colors.surfaceSoft }]}>
+            <Icon name="pin" size={14} color={colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.iconCircle, { backgroundColor: "#ff5252" }]}
+            style={[styles.iconCircle, { backgroundColor: isDark ? colors.accentStrong : "#ff5252" }]}
           >
-            <Icon name="trash" size={14} color="#fff" />
+            <Icon name="trash" size={14} color={colors.onPrimary} />
           </TouchableOpacity>
         </View>
       </View>
 
-      <Text style={styles.noteTitle} numberOfLines={1}>
+      <Text style={[styles.noteTitle, { color: colors.textPrimary }]} numberOfLines={1}>
         {item.title}
       </Text>
-      <Text style={styles.noteContent} numberOfLines={3}>
+      <Text style={[styles.noteContent, { color: colors.textSecondary }]} numberOfLines={3}>
         {item.content}
       </Text>
 
       <View style={styles.cardFooter}>
-        <Text style={styles.noteDate}>{item.date}</Text>
-        <Text style={styles.detailText}>Nhấn để xem chi tiết</Text>
+        <Text style={[styles.noteDate, { color: colors.textMuted }]}>{item.date}</Text>
+        <Text style={[styles.detailText, { color: colors.textMuted }]}>Nhấn để xem chi tiết</Text>
       </View>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View style={styles.userInfo}>
-            <LinearGradient
-              colors={["#FF007F", "#BD00FF"]}
-              style={styles.avatar}
-            >
-              <Icon name="sparkles" size={20} color="#fff" />
-            </LinearGradient>
-            <View style={{ marginLeft: 12 }}>
-              <Text style={styles.appName}>Notes</Text>
-              <Text style={styles.userEmail}>huyhoang092005@gmail.co</Text>
-            </View>
-          </View>
-          <Switch
-            trackColor={{ false: "#3e3e3e", true: "#BD00FF" }}
-            thumbColor={isEnabled ? "#fff" : "#f4f3f4"}
-            onValueChange={toggleSwitch}
-            value={isEnabled}
-          />
-        </View>
+        <AppHeader navigation={navigation} />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -119,31 +100,27 @@ const Home = ({ navigation }) => {
           {/* My Notes Title & New Button */}
           <View style={styles.titleSection}>
             <View>
-              <Text style={styles.mainTitle}>Ghi chú của tôi</Text>
-              <Text style={styles.statsText}>✨ 3 ghi chú · 0 đã ghim</Text>
+              <Text style={[styles.mainTitle, { color: colors.textPrimary }]}>Ghi chú của tôi</Text>
+              <Text style={[styles.statsText, { color: colors.textMuted }]}>✨ 3 ghi chú · 0 đã ghim</Text>
             </View>
             <TouchableOpacity style={styles.btnCreateWrapper}>
               <LinearGradient
-                colors={["#FF007F", "#BD00FF"]}
+                colors={colors.buttonGradient}
                 style={styles.btnCreate}
               >
-                <Icon name="add" size={20} color="#fff" />
-                <Text style={styles.btnCreateText}>Tạo mới</Text>
+                <Icon name="add" size={20} color={colors.onPrimary} />
+                <Text style={[styles.btnCreateText, { color: colors.onPrimary }]}>Tạo mới</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
 
           {/* Search Bar */}
-          <View style={styles.searchBar}>
-            <Icon
-              name="search-outline"
-              size={20}
-              color="rgba(255,255,255,0.4)"
-            />
+          <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Icon name="search-outline" size={20} color={colors.textMuted} />
             <TextInput
               placeholder="Tìm theo tiêu đề..."
-              placeholderTextColor="rgba(255,255,255,0.3)"
-              style={styles.searchInput}
+              placeholderTextColor={colors.textMuted}
+              style={[styles.searchInput, { color: colors.textPrimary }]}
             />
           </View>
 
@@ -161,72 +138,10 @@ const Home = ({ navigation }) => {
           />
         </ScrollView>
 
-        {/* Bottom Navigation (Static) */}
-        <View style={styles.container}>
-          {/* ... nội dung trang chủ ... */}
-
-          {/* Cập nhật Bottom Navigation */}
-          <View style={styles.bottomTab}>
-            <TouchableOpacity style={[styles.tabItem, styles.tabItemActive]}>
-              <Icon name="document" size={22} color="#fff" />
-              <Text style={[styles.tabLabel, { color: "#fff" }]}>Ghi chú</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.tabItem}
-              onPress={() => navigation.navigate("Shared")} // Chuyển sang trang Chia sẻ
-            >
-              <Icon
-                name="share-social-outline"
-                size={22}
-                color="rgba(255,255,255,0.4)"
-              />
-              <Text style={styles.tabLabel}>Chia sẻ</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.tabItem}>
-              <Icon
-                name="trash-outline"
-                size={22}
-                color="rgba(255,255,255,0.4)"
-              />
-              <Text style={styles.tabLabel}>Thùng rác</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.tabItem}
-              onPress={() => navigation.navigate("Profile")}
-            >
-              <Icon
-                name="person-outline"
-                size={22}
-                color="rgba(255,255,255,0.4)"
-              />
-              <Text style={styles.tabLabel}>Tài khoản</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <AppBottomTab navigation={navigation} activeTab="Home" />
       </SafeAreaView>
     </View>
   );
 };
-
-const TabItem = ({ icon, label, active }) => (
-  <TouchableOpacity style={[styles.tabItem, active && styles.tabItemActive]}>
-    <Icon
-      name={icon}
-      size={22}
-      color={active ? "#fff" : "rgba(255,255,255,0.4)"}
-    />
-    <Text
-      style={[
-        styles.tabLabel,
-        { color: active ? "#fff" : "rgba(255,255,255,0.4)" },
-      ]}
-    >
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
 
 export default Home;

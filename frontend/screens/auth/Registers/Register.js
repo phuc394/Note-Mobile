@@ -13,13 +13,15 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
 import { styles } from "./RegisterStyle";
+import { useAppTheme } from "../../../theme/AppTheme";
 
 const Register = ({ navigation }) => {
+  const { colors, isDark } = useAppTheme();
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <LinearGradient colors={["#08081a", "#12122b"]} style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <LinearGradient colors={colors.pageGradient} style={styles.container}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <SafeAreaView style={{ flex: 1, width: "100%" }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -29,22 +31,22 @@ const Register = ({ navigation }) => {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, shadowColor: colors.shadow }]}>
               {/* Logo phát sáng */}
               <View style={styles.logoWrapper}>
                 <LinearGradient
-                  colors={["#FF007F", "#BD00FF"]}
+                  colors={colors.logoGradient}
                   style={styles.logoContainer}
                 >
-                  <Icon name="sparkles" size={35} color="#fff" />
+                  <Icon name="sparkles" size={35} color={colors.onPrimary} />
                 </LinearGradient>
               </View>
 
-              <Text style={styles.title}>Tạo tài khoản mới</Text>
-              <Text style={styles.subtitle}>Điền thông tin để đăng ký</Text>
+              <Text style={[styles.title, { color: colors.textPrimary }]}>Tạo tài khoản mới</Text>
+              <Text style={[styles.subtitle, { color: colors.textMuted }]}>Điền thông tin để đăng ký</Text>
 
               {/* Bộ chọn Tab */}
-              <View style={styles.tabContainer}>
+              <View style={[styles.tabContainer, { backgroundColor: colors.surfaceSoft }]}>
                 <TouchableOpacity
                   style={styles.tab}
                   onPress={() => navigation.navigate("Login")}
@@ -52,13 +54,13 @@ const Register = ({ navigation }) => {
                   <Icon
                     name="log-in-outline"
                     size={18}
-                    color="rgba(255,255,255,0.4)"
+                    color={colors.tabInactive}
                   />
-                  <Text style={styles.tabText}>Đăng nhập</Text>
+                  <Text style={[styles.tabText, { color: colors.tabInactive }]}>Đăng nhập</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.tab, styles.tabActive]}>
-                  <Icon name="person-add" size={18} color="#fff" />
-                  <Text style={[styles.tabText, styles.tabTextActive]}>
+                <TouchableOpacity style={[styles.tab, styles.tabActive, { backgroundColor: colors.primary, borderColor: colors.border }]}>
+                  <Icon name="person-add" size={18} color={colors.onPrimary} />
+                  <Text style={[styles.tabText, styles.tabTextActive, { color: colors.onPrimary }]}>
                     Đăng ký
                   </Text>
                 </TouchableOpacity>
@@ -69,12 +71,14 @@ const Register = ({ navigation }) => {
                 label="Họ và tên"
                 icon="person-outline"
                 placeholder="Nguyễn Văn A"
+                colors={colors}
               />
               <InputField
                 label="Email"
                 icon="mail-outline"
                 placeholder="your@email.com"
                 keyboardType="email-address"
+                colors={colors}
               />
               <InputField
                 label="Mật khẩu"
@@ -83,6 +87,7 @@ const Register = ({ navigation }) => {
                 secureTextEntry={!showPassword}
                 isPassword
                 toggleVisible={() => setShowPassword(!showPassword)}
+                colors={colors}
               />
               <InputField
                 label="Xác nhận mật khẩu"
@@ -91,15 +96,16 @@ const Register = ({ navigation }) => {
                 secureTextEntry={!showPassword}
                 isPassword
                 toggleVisible={() => setShowPassword(!showPassword)}
+                colors={colors}
               />
 
               {/* Nút bấm chính */}
               <TouchableOpacity
-                style={styles.mainButtonWrapper}
+                style={[styles.mainButtonWrapper, { shadowColor: colors.primary }]}
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={["#FF007F", "#BD00FF"]}
+                  colors={colors.buttonGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.mainButton}
@@ -107,10 +113,10 @@ const Register = ({ navigation }) => {
                   <Icon
                     name="person-add"
                     size={20}
-                    color="#fff"
+                    color={colors.onPrimary}
                     style={{ marginRight: 10 }}
                   />
-                  <Text style={styles.buttonText}>Tạo tài khoản</Text>
+                  <Text style={[styles.buttonText, { color: colors.onPrimary }]}>Tạo tài khoản</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -124,15 +130,15 @@ const Register = ({ navigation }) => {
 // Thành phần ô nhập liệu dùng chung
 const InputField = ({ label, icon, isPassword, toggleVisible, ...props }) => (
   <View style={styles.inputGroup}>
-    <Text style={styles.label}>{label}</Text>
-    <View style={styles.inputWrapper}>
-      <Icon name={icon} size={20} color="rgba(255,255,255,0.3)" />
+    <Text style={[styles.label, { color: props.colors.textMuted }]}>{label}</Text>
+    <View style={[styles.inputWrapper, { backgroundColor: props.colors.inputBackground, borderColor: props.colors.inputBorder }]}>
+      <Icon name={icon} size={20} color={props.colors.textMuted} />
       <TextInput
-        style={styles.input}
-        placeholderTextColor="rgba(255,255,255,0.2)"
-        selectionColor="#FF007F"
+        style={[styles.input, { color: props.colors.textPrimary }]}
+        placeholderTextColor={props.colors.textMuted}
+        selectionColor={props.colors.primary}
         autoCapitalize="none"
-        underlineColorAndroid="transparent" // Đảm bảo không có nền mặc định
+        underlineColorAndroid="transparent"
         {...props}
       />
       {isPassword && (
@@ -140,7 +146,7 @@ const InputField = ({ label, icon, isPassword, toggleVisible, ...props }) => (
           <Icon
             name={props.secureTextEntry ? "eye-off-outline" : "eye-outline"}
             size={20}
-            color="rgba(255,255,255,0.3)"
+            color={props.colors.textMuted}
           />
         </TouchableOpacity>
       )}

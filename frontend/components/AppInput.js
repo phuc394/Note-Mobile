@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useAppTheme } from "../theme/AppTheme";
 
 const AppInput = ({
   label,
@@ -18,28 +19,40 @@ const AppInput = ({
   rightIcon,
   onRightIconPress,
   ...rest
-}) => (
-  <View style={styles.container}>
-    <Text style={styles.label}>{label}</Text>
-    <View style={styles.inputContainer}>
-      <Icon name={icon} size={18} color="#A0AEC0" style={styles.leftIcon} />
-      <TextInput
-        style={styles.input}
-        placeholder={placeholder}
-        placeholderTextColor="rgba(255, 255, 255, 0.4)"
-        value={value}
-        onChangeText={onChangeText}
-        secureTextEntry={secureTextEntry}
-        {...rest}
-      />
-      {rightIcon && (
-        <TouchableOpacity onPress={onRightIconPress} style={styles.rightIcon}>
-          <Icon name={rightIcon} size={18} color="#A0AEC0" />
-        </TouchableOpacity>
-      )}
+}) => {
+  const { colors } = useAppTheme();
+
+  return (
+    <View style={styles.container}>
+      <Text style={[styles.label, { color: colors.textMuted }]}>{label}</Text>
+      <View
+        style={[
+          styles.inputContainer,
+          {
+            backgroundColor: colors.inputBackground,
+            borderColor: colors.inputBorder,
+          },
+        ]}
+      >
+        <Icon name={icon} size={18} color={colors.textMuted} style={styles.leftIcon} />
+        <TextInput
+          style={[styles.input, { color: colors.textPrimary }]}
+          placeholder={placeholder}
+          placeholderTextColor={colors.textMuted}
+          value={value}
+          onChangeText={onChangeText}
+          secureTextEntry={secureTextEntry}
+          {...rest}
+        />
+        {rightIcon && (
+          <TouchableOpacity onPress={onRightIconPress} style={styles.rightIcon}>
+            <Icon name={rightIcon} size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -47,16 +60,13 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   label: {
-    color: "#A0AEC0",
     fontSize: 12,
     marginBottom: 8,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(25, 25, 50, 0.6)", // Hiệu ứng mờ tối
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 12,
     paddingHorizontal: 15,
     height: 50,
@@ -66,7 +76,6 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: "#FFFFFF",
     fontSize: 14,
   },
   rightIcon: {
