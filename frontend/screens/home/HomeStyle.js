@@ -1,7 +1,7 @@
 import { StyleSheet, Dimensions } from "react-native";
 
 const { width } = Dimensions.get("window");
-const cardWidth = (width - 60) / 2; // Tự động tính toán để vừa khít 2 cột
+const cardWidth = (width - 60) / 2;
 
 export const styles = StyleSheet.create({
   container: {

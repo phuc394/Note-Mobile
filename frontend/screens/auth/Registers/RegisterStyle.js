@@ -25,7 +25,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
     alignItems: "center",
-    // Đổ bóng cho Card
+    // Card shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 20 },
     shadowOpacity: 0.5,
@@ -118,7 +118,7 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     marginLeft: 12,
     height: "100%",
-    backgroundColor: "transparent", // KHẮC PHỤC dải trắng
+    backgroundColor: "transparent",
   },
   mainButtonWrapper: {
     width: "100%",

@@ -1,0 +1,121 @@
+import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  toolbar: {
+    minHeight: 74,
+    borderBottomWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  iconButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  toolbarTitleBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
+  toolbarTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    padding: 0,
+    minHeight: 24,
+  },
+  toolbarMeta: {
+    fontSize: 11,
+    marginTop: 3,
+  },
+  toolbarActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  visibilityPill: {
+    minHeight: 38,
+    borderRadius: 18,
+    paddingLeft: 10,
+    paddingRight: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  visibilityText: {
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  saveButton: {
+    height: 38,
+    borderRadius: 18,
+    paddingHorizontal: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+  saveText: {
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  errorBar: {
+    minHeight: 38,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  errorText: {
+    color: "#ff6b6b",
+    fontSize: 13,
+    fontWeight: "700",
+    flex: 1,
+  },
+  noticeBar: {
+    minHeight: 38,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  noticeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    flex: 1,
+  },
+  documentWrap: {
+    paddingHorizontal: 10,
+    paddingTop: 14,
+    paddingBottom: 70,
+  },
+  documentPage: {
+    width: "100%",
+    minHeight: 720,
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingHorizontal: 22,
+    paddingTop: 24,
+    paddingBottom: 34,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+    elevation: 5,
+  },
+  loader: {
+    marginTop: 80,
+  },
+  documentBody: {
+    minHeight: 640,
+    fontSize: 17,
+    lineHeight: 28,
+    padding: 0,
+    textAlignVertical: "top",
+  },
+});

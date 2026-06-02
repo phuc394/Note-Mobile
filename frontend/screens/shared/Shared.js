@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -8,89 +8,95 @@ import {
   SafeAreaView,
   StatusBar,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useDispatch, useSelector } from "react-redux";
 import { styles } from "./SharedStyle";
 import { useAppTheme } from "../../theme/AppTheme";
 import AppHeader from "../../components/AppHeader";
 import AppBottomTab from "../../components/AppBottomTab";
+import { fetchSharedNotes } from "../../redux/sharedSlice";
+
+const formatDate = (value) => {
+  if (!value) return "";
+  return new Date(value).toISOString().slice(0, 10);
+};
 
 const Shared = ({ navigation }) => {
-  const { colors, isDark, toggleTheme } = useAppTheme();
+  const { colors, isDark } = useAppTheme();
+  const dispatch = useDispatch();
+  const { items: sharedNotes, loading, error } = useSelector((state) => state.shared);
+  const [searchText, setSearchText] = useState("");
 
-  // Dữ liệu mẫu từ image_bf2499.jpg
-  const sharedNotes = [
-    {
-      id: "1",
-      title: "Kế hoạch dự án Q2",
-      content:
-        "Các mục tiêu và nhiệm vụ cho quý 2 năm 2026. Tập trung vào phát triển sản phẩm mới và mở rộng thị",
-      date: "2026-05-08",
-      owner: "Nguyễn Văn A",
-      permission: "Chỉ xem",
-      colors: isDark ? [colors.surface, colors.surfaceSoft] : ["#FFF8ED", "#C7D7E5"],
-    },
-    {
-      id: "2",
-      title: "Công thức nấu ăn",
-      content:
-        "Cách làm bánh flan: 4 quả trứng, 500ml sữa tươi, 100g đường, vani. Hấp cách thủy 30 phút.",
-      date: "2026-05-05",
-      owner: "Trần Thị B",
-      permission: "Chỉ xem",
-      colors: isDark ? [colors.surface, colors.surfaceSoft] : ["#FFF8ED", "#E8C4C4"],
-    },
-    {
-      id: "3",
-      title: "Địa điểm du lịch hè",
-      content:
-        "Danh sách các địa điểm đáng tham quan: Đà Lạt, Nha Trang, Phú Quốc, Sapa, Hội An.",
-      date: "2026-05-01",
-      owner: "Lê Văn C",
-      permission: "Chỉ xem",
-      colors: isDark ? [colors.surface, colors.surfaceSoft] : ["#FFF8ED", "#CBD8C0"],
-    },
-  ];
+  useEffect(() => {
+    dispatch(fetchSharedNotes());
+  }, [dispatch]);
 
-  const renderSharedCard = ({ item }) => (
-    <LinearGradient
-      colors={item.colors}
-      style={[styles.sharedCard, { borderColor: colors.border, shadowColor: colors.shadow }]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.actionIcons}>
-          <TouchableOpacity style={[styles.iconCircle, { backgroundColor: colors.surfaceSoft }]}>
-            <Icon name="pin" size={14} color={colors.textPrimary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.iconCircle, { backgroundColor: colors.surfaceSoft }]}>
-            <Icon name="eye-off" size={14} color={colors.textPrimary} />
-          </TouchableOpacity>
-        </View>
-      </View>
+  const filteredNotes = useMemo(() => {
+    const keyword = searchText.trim().toLowerCase();
+    if (!keyword) return sharedNotes;
 
-      <Text style={[styles.noteTitle, { color: colors.textPrimary }]}>{item.title}</Text>
-      <Text style={[styles.noteContent, { color: colors.textSecondary }]} numberOfLines={2}>
-        {item.content}
-      </Text>
+    return sharedNotes.filter((note) =>
+      `${note.title ?? ""} ${note.content ?? ""}`.toLowerCase().includes(keyword)
+    );
+  }, [sharedNotes, searchText]);
 
-      <View style={styles.cardFooter}>
-        <View style={styles.permissionBadge}>
-          <Icon name="eye-outline" size={14} color={colors.textMuted} />
-          <Text style={[styles.footerText, { color: colors.textMuted }]}> {item.permission}</Text>
-        </View>
-        <View style={{ alignItems: "flex-end" }}>
-          <Text style={[styles.ownerName, { color: colors.textPrimary }]}>{item.owner}</Text>
-          <Text style={[styles.footerText, { color: colors.textMuted }]}>
-            <Icon name="calendar-outline" size={12} color={colors.textMuted} /> {item.date}
+  const renderSharedCard = ({ item, index }) => {
+    const cardColors = isDark
+      ? [colors.surface, colors.surfaceSoft]
+      : index % 2 === 0
+        ? ["#FFF8ED", "#C7D7E5"]
+        : ["#FFF8ED", "#E8C4C4"];
+    const permission = item.can_edit || item.shared_can_edit ? "Can edit" : "View only";
+
+    return (
+      <TouchableOpacity
+        onPress={() => navigation.navigate("NoteDetails", { noteId: item.id })}
+        activeOpacity={0.88}
+      >
+        <LinearGradient
+          colors={cardColors}
+          style={[styles.sharedCard, { borderColor: colors.border, shadowColor: colors.shadow }]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.cardHeader}>
+            <View style={styles.actionIcons}>
+              <View style={[styles.iconCircle, { backgroundColor: colors.surfaceSoft }]}>
+                <Icon name={item.is_pinned ? "pin" : "pin-outline"} size={14} color={colors.textPrimary} />
+              </View>
+              <View style={[styles.iconCircle, { backgroundColor: colors.surfaceSoft }]}>
+                <Icon name="eye" size={14} color={colors.textPrimary} />
+              </View>
+            </View>
+          </View>
+
+          <Text style={[styles.noteTitle, { color: colors.textPrimary }]}>{item.title}</Text>
+          <Text style={[styles.noteContent, { color: colors.textSecondary }]} numberOfLines={2}>
+            {item.content || "No content yet"}
           </Text>
-        </View>
-      </View>
-      <Text style={[styles.clickDetail, { color: colors.textMuted }]}>Nhấn để xem chi tiết</Text>
-    </LinearGradient>
-  );
+
+          <View style={styles.cardFooter}>
+            <View style={styles.permissionBadge}>
+              <Icon name={item.can_edit || item.shared_can_edit ? "create-outline" : "eye-outline"} size={14} color={colors.textMuted} />
+              <Text style={[styles.footerText, { color: colors.textMuted }]}> {permission}</Text>
+            </View>
+            <View style={{ alignItems: "flex-end" }}>
+              <Text style={[styles.ownerName, { color: colors.textPrimary }]}>
+                {item.owner_username || `User #${item.user_id}`}
+              </Text>
+              <Text style={[styles.footerText, { color: colors.textMuted }]}>
+                <Icon name="calendar-outline" size={12} color={colors.textMuted} /> {formatDate(item.shared_at || item.updated_at)}
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.clickDetail, { color: colors.textMuted }]}>Tap to view details</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -103,26 +109,36 @@ const Shared = ({ navigation }) => {
           contentContainerStyle={{ paddingBottom: 100 }}
         >
           <View style={styles.titleSection}>
-            <Text style={[styles.mainTitle, { color: colors.textPrimary }]}>Ghi chú đã chia sẻ</Text>
-            <Text style={[styles.statsText, { color: colors.textMuted }]}>👥 4 ghi chú · 0 đã ghim</Text>
+            <Text style={[styles.mainTitle, { color: colors.textPrimary }]}>Shared notes</Text>
+            <Text style={[styles.statsText, { color: colors.textMuted }]}>
+              {sharedNotes.length} notes
+            </Text>
           </View>
 
           <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Icon name="search-outline" size={20} color={colors.textMuted} />
             <TextInput
-              placeholder="Tìm theo tiêu đề..."
+              placeholder="Search by title..."
               placeholderTextColor={colors.textMuted}
               style={[styles.searchInput, { color: colors.textPrimary }]}
+              value={searchText}
+              onChangeText={setSearchText}
             />
           </View>
 
-          <FlatList
-            data={sharedNotes}
-            renderItem={renderSharedCard}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-          />
+          {loading ? (
+            <ActivityIndicator color={colors.primary} style={{ marginTop: 30 }} />
+          ) : error ? (
+            <Text style={[styles.statsText, { color: "#ff6b6b", paddingHorizontal: 20 }]}>{error}</Text>
+          ) : (
+            <FlatList
+              data={filteredNotes}
+              renderItem={renderSharedCard}
+              keyExtractor={(item) => String(item.id)}
+              scrollEnabled={false}
+              contentContainerStyle={{ paddingHorizontal: 20 }}
+            />
+          )}
         </ScrollView>
 
         <AppBottomTab navigation={navigation} activeTab="Shared" />

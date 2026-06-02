@@ -1,7 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-// Bạn cần cài đặt expo-linear-gradient hoặc react-native-linear-gradient
 import { LinearGradient } from "expo-linear-gradient";
 import { useAppTheme } from "../theme/AppTheme";
 
@@ -13,17 +12,17 @@ const AppButton = ({ title, icon, onPress }) => {
       onPress={onPress}
       style={[styles.shadow, { shadowColor: colors.primary }]}
     >
-    <LinearGradient
-      colors={colors.buttonGradient}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.button}
-    >
-      {icon && (
-        <Icon name={icon} size={20} color={colors.onPrimary} style={styles.icon} />
-      )}
-      <Text style={[styles.title, { color: colors.onPrimary }]}>{title}</Text>
-    </LinearGradient>
+      <LinearGradient
+        colors={colors.buttonGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.button}
+      >
+        {icon && (
+          <Icon name={icon} size={20} color={colors.onPrimary} style={styles.icon} />
+        )}
+        <Text style={[styles.title, { color: colors.onPrimary }]}>{title}</Text>
+      </LinearGradient>
     </TouchableOpacity>
   );
 };

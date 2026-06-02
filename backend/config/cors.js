@@ -6,13 +6,14 @@ const configuredOrigins = [
 ];
 
 const allowAllOrigins = !isProduction && configuredOrigins.length === 0;
+const hasWildcardOrigin = configuredOrigins.includes('*');
 
 function isOriginAllowed(origin) {
   if (!origin) {
     return true;
   }
 
-  if (allowAllOrigins) {
+  if (allowAllOrigins || hasWildcardOrigin) {
     return true;
   }
 

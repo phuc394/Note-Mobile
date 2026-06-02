@@ -127,7 +127,7 @@ export const styles = StyleSheet.create({
   },
   buttonText: { color: "#FFFFFF", fontSize: 17, fontWeight: "bold" },
 
-  // Phụ trợ cho đẹp
+  // Supporting styles
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",

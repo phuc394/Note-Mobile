@@ -2,7 +2,7 @@ import connection from '../config/database.js';
 
 const db = connection.promise();
 
-function notFoundError(message = 'Khong tim thay ghi chu da xoa') {
+function notFoundError(message = 'Deleted note not found') {
   const error = new Error(message);
   error.statusCode = 404;
   return error;
@@ -36,12 +36,12 @@ async function getDeletedNoteByOwner(id, userId) {
 
 function normalizeIds(ids) {
   if (!Array.isArray(ids)) {
-    throw badRequestError('Danh sach id ghi chu la bat buoc');
+    throw badRequestError('Note id list is required');
   }
 
   const normalizedIds = [...new Set(ids.map(Number))].filter(Number.isInteger);
   if (normalizedIds.length === 0) {
-    throw badRequestError('Danh sach id ghi chu khong hop le');
+    throw badRequestError('Invalid note id list');
   }
 
   return normalizedIds;

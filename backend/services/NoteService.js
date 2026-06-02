@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import handlebars from 'handlebars';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { isProduction } from '../config/env.js';
 import connection from '../config/database.js';
 import { emitSharedNoteUpdated } from '../socket.js';
@@ -12,6 +12,7 @@ const db = connection.promise();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const inviteTemplatePath = path.join(__dirname, '../templates/noteInvite.hbs');
+let resendClient;
 
 async function getUserById(userId) {
   const [users] = await db.query(
@@ -31,22 +32,20 @@ async function getCurrentUser(userId) {
   return user;
 }
 
-function createMailTransporter() {
-  if (process.env.SMTP_HOST) {
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT ?? 587),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: process.env.SMTP_USER && process.env.SMTP_PASS
-        ? {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          }
-        : undefined,
-    });
+function getResendClient() {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is required to send invite emails');
   }
 
-  return nodemailer.createTransport({ jsonTransport: true });
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+
+  return resendClient;
+}
+
+function getInviteSender() {
+  return process.env.RESEND_FROM_EMAIL ?? 'Note Mobile <onboarding@resend.dev>';
 }
 
 function toBoolean(value) {
@@ -76,25 +75,30 @@ async function sendInviteEmail({ invitedEmail, note, inviter, canEdit }) {
     inviteUrl,
     noteTitle: note.title,
     inviterName: inviter.username,
-    permission: canEdit ? 'doc va chinh sua' : 'chi doc',
+    permission: canEdit ? 'view and edit' : 'view only',
   });
 
-  const transporter = createMailTransporter();
-  await transporter.sendMail({
-    from: process.env.MAIL_FROM ?? process.env.SMTP_USER ?? 'Note Mobile <no-reply@note-mobile.local>',
-    to: invitedEmail,
+  const { error } = await getResendClient().emails.send({
+    from: getInviteSender(),
+    to: [invitedEmail],
     subject: `${inviter.username} invited you to a note`,
     html,
   });
+
+  if (error) {
+    const sendError = new Error(error.message ?? 'Failed to send invite email');
+    sendError.statusCode = 502;
+    throw sendError;
+  }
 }
 
-function notFoundError(message = 'Khong tim thay ghi chu') {
+function notFoundError(message = 'Note not found') {
   const error = new Error(message);
   error.statusCode = 404;
   return error;
 }
 
-function forbiddenError(message = 'Ban khong co quyen thuc hien thao tac nay') {
+function forbiddenError(message = 'You do not have permission to perform this action') {
   const error = new Error(message);
   error.statusCode = 403;
   return error;
@@ -133,7 +137,7 @@ async function getOwnedNote(noteId, userId) {
   );
 
   if (!notes[0]) {
-    throw notFoundError('Khong tim thay ghi chu cua ban');
+    throw notFoundError('Your note was not found');
   }
 
   return notes[0];
@@ -213,7 +217,7 @@ export async function TogglePublicNote(id, userId, isPublic) {
 export async function InviteUserToNote(id, userId, invitedEmail, canEdit = false) {
   const email = invitedEmail?.trim().toLowerCase();
   if (!email) {
-    const error = new Error('Email nguoi duoc moi la bat buoc');
+    const error = new Error('Invitee email is required');
     error.statusCode = 400;
     throw error;
   }
@@ -222,11 +226,11 @@ export async function InviteUserToNote(id, userId, invitedEmail, canEdit = false
   const note = await getOwnedNote(id, userId);
 
   if (!note.is_public) {
-    throw forbiddenError('Chi co the moi nguoi khac khi note dang public');
+    throw forbiddenError('You can only invite users when the note is public');
   }
 
   if (owner.email.toLowerCase() === email) {
-    const error = new Error('Khong the moi chinh ban vao note cua ban');
+    const error = new Error('You cannot invite yourself to your own note');
     error.statusCode = 400;
     throw error;
   }
@@ -254,7 +258,7 @@ export async function InviteUserToNote(id, userId, invitedEmail, canEdit = false
 export async function UpdateInvitePermission(id, userId, invitedEmail, canEdit) {
   const email = invitedEmail?.trim().toLowerCase();
   if (!email) {
-    const error = new Error('Email nguoi duoc moi la bat buoc');
+    const error = new Error('Invitee email is required');
     error.statusCode = 400;
     throw error;
   }
@@ -266,7 +270,7 @@ export async function UpdateInvitePermission(id, userId, invitedEmail, canEdit) 
   );
 
   if (result.affectedRows === 0) {
-    throw notFoundError('Khong tim thay loi moi');
+    throw notFoundError('Invite not found');
   }
 
   return result;
@@ -336,7 +340,7 @@ export async function DeleteNote(id, userId) {
 
 export async function CreateNote(title, content, userId) {
   if (!title?.trim()) {
-    const error = new Error('Tieu de ghi chu la bat buoc');
+    const error = new Error('Note title is required');
     error.statusCode = 400;
     throw error;
   }
@@ -361,7 +365,7 @@ export async function EditNote(id, userId, title, content) {
   }
 
   if (!note.is_owner && !note.shared_can_edit) {
-    throw forbiddenError('Ban chi co quyen xem ghi chu nay');
+    throw forbiddenError('You only have permission to view this note');
   }
 
   const nextTitle = note.is_owner ? title?.trim() || note.title : note.title;

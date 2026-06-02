@@ -1,6 +1,6 @@
 import * as NoteService from '../services/NoteService.js';
 
-function handleError(res, error, fallbackMessage = 'Loi Server') {
+function handleError(res, error, fallbackMessage = 'Server error') {
   return res.status(error.statusCode ?? 500).json({
     message: error.message || fallbackMessage,
   });
@@ -16,7 +16,7 @@ export async function GetNote(req, res) {
     const note = await NoteService.GetNote(id, req.user.id);
     return res.status(200).json(note);
   } catch (error) {
-    return handleError(res, error, 'Loi khi lay chi tiet ghi chu');
+    return handleError(res, error, 'Failed to fetch note details');
   }
 }
 
@@ -25,7 +25,7 @@ export async function GetAllNotes(req, res) {
     const notes = await NoteService.GetAllNotes(req.user.id);
     return res.status(200).json(notes);
   } catch (error) {
-    return handleError(res, error, 'Loi khi lay danh sach ghi chu');
+    return handleError(res, error, 'Failed to fetch notes');
   }
 }
 
@@ -34,7 +34,7 @@ export async function GetSharedNotes(req, res) {
     const notes = await NoteService.GetSharedNotes(req.user.id);
     return res.status(200).json(notes);
   } catch (error) {
-    return handleError(res, error, 'Loi khi lay danh sach ghi chu duoc chia se');
+    return handleError(res, error, 'Failed to fetch shared notes');
   }
 }
 
@@ -45,10 +45,10 @@ export async function TogglePinNote(req, res) {
 
     await NoteService.TogglePinNote(id, req.user.id, is_pinned);
     return res.status(200).json({
-      message: toBoolean(is_pinned) ? 'Da ghim ghi chu' : 'Da bo ghim ghi chu',
+      message: toBoolean(is_pinned) ? 'Note pinned' : 'Note unpinned',
     });
   } catch (error) {
-    return handleError(res, error, 'Loi khi cap nhat trang thai ghim');
+    return handleError(res, error, 'Failed to update pin status');
   }
 }
 
@@ -60,11 +60,11 @@ export async function TogglePublicNote(req, res) {
     await NoteService.TogglePublicNote(id, req.user.id, is_public);
     return res.status(200).json({
       message: toBoolean(is_public)
-        ? 'Da bat public cho ghi chu'
-        : 'Da chuyen ghi chu ve private va xoa tat ca loi moi',
+        ? 'Note is now public'
+        : 'Note is now private and all invites were removed',
     });
   } catch (error) {
-    return handleError(res, error, 'Loi khi cap nhat trang thai public/private');
+    return handleError(res, error, 'Failed to update visibility');
   }
 }
 
@@ -80,11 +80,11 @@ export async function InviteUserToNote(req, res) {
     );
 
     return res.status(201).json({
-      message: 'Da gui loi moi thanh cong',
+      message: 'Invite sent successfully',
       invite,
     });
   } catch (error) {
-    return handleError(res, error, 'Loi khi moi nguoi dung vao ghi chu');
+    return handleError(res, error, 'Failed to invite user to note');
   }
 }
 
@@ -100,10 +100,10 @@ export async function UpdateInvitePermission(req, res) {
     );
 
     return res.status(200).json({
-      message: 'Da cap nhat quyen cua nguoi duoc moi',
+      message: 'Invite permission updated',
     });
   } catch (error) {
-    return handleError(res, error, 'Loi khi cap nhat quyen chia se');
+    return handleError(res, error, 'Failed to update sharing permission');
   }
 }
 
@@ -112,9 +112,9 @@ export async function RemoveInvite(req, res) {
     const { id } = req.params;
     const { email } = req.params;
     await NoteService.RemoveInvite(id, req.user.id, email);
-    return res.status(200).json({ message: 'Da xoa quyen truy cap ghi chu' });
+    return res.status(200).json({ message: 'Note access removed' });
   } catch (error) {
-    return handleError(res, error, 'Loi khi xoa quyen chia se');
+    return handleError(res, error, 'Failed to remove sharing permission');
   }
 }
 
@@ -124,18 +124,18 @@ export async function searchNotes(req, res) {
 
     if (!keyword || keyword.trim() === '') {
       return res.status(400).json({
-        message: 'Vui long nhap tu khoa tim kiem',
+        message: 'Please enter a search keyword',
         data: [],
       });
     }
 
     const notes = await NoteService.searchNotes(req.user.id, keyword);
     return res.status(200).json({
-      message: 'Tim kiem ghi chu thanh cong',
+      message: 'Notes searched successfully',
       data: notes,
     });
   } catch (error) {
-    return handleError(res, error, 'Loi server khi tim kiem ghi chu');
+    return handleError(res, error, 'Failed to search notes');
   }
 }
 
@@ -143,9 +143,9 @@ export async function DeleteNote(req, res) {
   try {
     const { id } = req.params;
     await NoteService.DeleteNote(id, req.user.id);
-    return res.status(200).json({ message: 'Da xoa ghi chu' });
+    return res.status(200).json({ message: 'Note deleted' });
   } catch (error) {
-    return handleError(res, error, 'Loi khi xoa ghi chu');
+    return handleError(res, error, 'Failed to delete note');
   }
 }
 
@@ -154,11 +154,11 @@ export async function CreateNote(req, res) {
     const { title, content } = req.body;
     const note = await NoteService.CreateNote(title, content, req.user.id);
     return res.status(201).json({
-      message: 'Da tao ghi chu',
+      message: 'Note created',
       note,
     });
   } catch (error) {
-    return handleError(res, error, 'Loi khi tao ghi chu');
+    return handleError(res, error, 'Failed to create note');
   }
 }
 
@@ -168,8 +168,8 @@ export async function EditNote(req, res) {
     const { title, content } = req.body;
 
     await NoteService.EditNote(id, req.user.id, title, content);
-    return res.status(200).json({ message: 'Da cap nhat ghi chu' });
+    return res.status(200).json({ message: 'Note updated' });
   } catch (error) {
-    return handleError(res, error, 'Loi khi cap nhat ghi chu');
+    return handleError(res, error, 'Failed to update note');
   }
 }

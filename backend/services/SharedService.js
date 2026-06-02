@@ -3,13 +3,13 @@ import { emitSharedNoteUpdated } from '../socket.js';
 
 const db = connection.promise();
 
-function notFoundError(message = 'Khong tim thay ghi chu duoc chia se') {
+function notFoundError(message = 'Shared note not found') {
   const error = new Error(message);
   error.statusCode = 404;
   return error;
 }
 
-function forbiddenError(message = 'Ban khong co quyen chinh sua ghi chu nay') {
+function forbiddenError(message = 'You do not have permission to edit this note') {
   const error = new Error(message);
   error.statusCode = 403;
   return error;
@@ -28,7 +28,7 @@ async function getCurrentUser(userId) {
   );
 
   if (!users[0]) {
-    throw notFoundError('Khong tim thay nguoi dung');
+    throw notFoundError('User not found');
   }
 
   return users[0];
@@ -73,7 +73,7 @@ export async function getSharedNoteAccess(noteId, userId) {
 
 function ensureCanEdit(note) {
   if (!note.can_edit) {
-    throw forbiddenError('Ban chi co quyen doc ghi chu nay');
+    throw forbiddenError('You only have permission to read this note');
   }
 }
 
@@ -132,7 +132,7 @@ export async function getSharedNote(id, userId) {
 
 export async function replaceSharedNoteContent(id, userId, content) {
   if (content === undefined || content === null) {
-    throw badRequestError('Noi dung ghi chu la bat buoc');
+    throw badRequestError('Note content is required');
   }
 
   const note = await getSharedNoteAccess(id, userId);
@@ -155,7 +155,7 @@ export async function replaceSharedNoteContent(id, userId, content) {
 
 export async function appendSharedNoteContent(id, userId, content) {
   if (!content?.trim()) {
-    throw badRequestError('Noi dung can them la bat buoc');
+    throw badRequestError('Content to append is required');
   }
 
   const note = await getSharedNoteAccess(id, userId);

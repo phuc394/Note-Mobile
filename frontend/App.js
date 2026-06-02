@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Platform } from "react-native";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
-import AppNavigator from "./navigation/Navigation.js"; // Import Navigator vừa tạo
+import AppNavigator from "./navigation/Navigation.js";
 import { AppThemeProvider, useAppTheme } from "./theme/AppTheme";
 
 const AppShell = () => {
