@@ -2,10 +2,12 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useSelector } from "react-redux";
 import { useAppTheme } from "../theme/AppTheme";
 
 const AppHeader = ({ navigation, showBack = false, backTarget = "Home" }) => {
   const { colors, isDark, toggleTheme } = useAppTheme();
+  const user = useSelector((state) => state.auth.user);
 
   return (
     <View style={styles.wrapper}>
@@ -15,7 +17,7 @@ const AppHeader = ({ navigation, showBack = false, backTarget = "Home" }) => {
         </LinearGradient>
         <View style={{ marginLeft: 10 }}>
           <Text style={[styles.appName, { color: colors.textPrimary }]}>Notes</Text>
-          <Text style={[styles.userEmail, { color: colors.textMuted }]}>huyhoang092005@gmail.co</Text>
+          <Text style={[styles.userEmail, { color: colors.textMuted }]}>{user?.email ?? "Not signed in"}</Text>
         </View>
       </View>
 

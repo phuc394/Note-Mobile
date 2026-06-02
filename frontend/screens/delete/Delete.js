@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -10,40 +10,36 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useDispatch, useSelector } from "react-redux";
 import { styles } from "./DeleteStyle";
 import { useAppTheme } from "../../theme/AppTheme";
 import AppHeader from "../../components/AppHeader";
 import AppBottomTab from "../../components/AppBottomTab";
+import {
+  deleteAllDeletedNotes,
+  deleteDeletedNote,
+  fetchDeletedNotes,
+  restoreDeletedNote,
+} from "../../redux/deletedSlice";
 
-const initialDeletedNotes = [
-  {
-    id: "1",
-    title: "Ghi chú cũ",
-    content: "Nội dung không còn cần thiết",
-    date: "2026-05-09",
-  },
-  {
-    id: "2",
-    title: "Danh sách việc cũ",
-    content: "Các công việc đã hoàn thành từ tuần trước",
-    date: "2026-05-07",
-  },
-  {
-    id: "3",
-    title: "Nháp email",
-    content: "Nội dung email gửi cho khách hàng ABC tháng 4",
-    date: "2026-05-05",
-  },
-];
+const formatDate = (value) => {
+  if (!value) return "";
+  return new Date(value).toISOString().slice(0, 10);
+};
 
 const Delete = ({ navigation }) => {
   const { colors, isDark } = useAppTheme();
+  const dispatch = useDispatch();
+  const { items: deletedNotes, loading, error } = useSelector((state) => state.deleted);
   const [searchText, setSearchText] = useState("");
-  const [deletedNotes, setDeletedNotes] = useState(initialDeletedNotes);
   const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchDeletedNotes());
+  }, [dispatch]);
 
   const filteredNotes = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
@@ -51,28 +47,13 @@ const Delete = ({ navigation }) => {
       return deletedNotes;
     }
 
-    return deletedNotes.filter((note) => {
-      return (
-        note.title.toLowerCase().includes(normalizedSearch) ||
-        note.content.toLowerCase().includes(normalizedSearch)
-      );
-    });
+    return deletedNotes.filter((note) =>
+      `${note.title ?? ""} ${note.content ?? ""}`.toLowerCase().includes(normalizedSearch)
+    );
   }, [deletedNotes, searchText]);
 
-  const handleRestore = (noteId) => {
-    setDeletedNotes((currentNotes) =>
-      currentNotes.filter((note) => note.id !== noteId)
-    );
-  };
-
-  const handleDeletePermanent = (noteId) => {
-    setDeletedNotes((currentNotes) =>
-      currentNotes.filter((note) => note.id !== noteId)
-    );
-  };
-
   const handleDeleteAll = () => {
-    setDeletedNotes([]);
+    dispatch(deleteAllDeletedNotes());
     setShowDeleteAllModal(false);
   };
 
@@ -91,9 +72,11 @@ const Delete = ({ navigation }) => {
         {item.title}
       </Text>
       <Text style={[styles.cardContent, { color: colors.textSecondary }]} numberOfLines={2}>
-        {item.content}
+        {item.content || "No content yet"}
       </Text>
-      <Text style={[styles.cardMeta, { color: colors.textMuted }]}>Đã xóa: {item.date}</Text>
+      <Text style={[styles.cardMeta, { color: colors.textMuted }]}>
+        Deleted: {formatDate(item.deleted_at || item.updated_at)}
+      </Text>
 
       <View style={styles.cardActions}>
         <TouchableOpacity
@@ -104,11 +87,11 @@ const Delete = ({ navigation }) => {
               shadowColor: colors.primary,
             },
           ]}
-          onPress={() => handleRestore(item.id)}
+          onPress={() => dispatch(restoreDeletedNote(item.id))}
           activeOpacity={0.85}
         >
           <Icon name="refresh-outline" size={16} color={colors.onPrimary} />
-          <Text style={[styles.restoreText, { color: colors.onPrimary }]}>Khôi phục</Text>
+          <Text style={[styles.restoreText, { color: colors.onPrimary }]}>Restore</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -119,7 +102,7 @@ const Delete = ({ navigation }) => {
               shadowColor: colors.shadow,
             },
           ]}
-          onPress={() => handleDeletePermanent(item.id)}
+          onPress={() => dispatch(deleteDeletedNote(item.id))}
           activeOpacity={0.85}
         >
           <Icon name="close" size={18} color={colors.onPrimary} />
@@ -139,9 +122,9 @@ const Delete = ({ navigation }) => {
           contentContainerStyle={{ paddingBottom: 120 }}
         >
           <View style={styles.titleSection}>
-            <Text style={[styles.mainTitle, { color: colors.textPrimary }]}>Thùng rác</Text>
+            <Text style={[styles.mainTitle, { color: colors.textPrimary }]}>Trash</Text>
             <Text style={[styles.statsText, { color: colors.textMuted }]}>
-              {filteredNotes.length} ghi chú · Tự xóa sau 30 ngày
+              {filteredNotes.length} notes - Auto-deletes after 30 days
             </Text>
           </View>
 
@@ -157,13 +140,13 @@ const Delete = ({ navigation }) => {
             activeOpacity={0.85}
           >
             <Icon name="trash-outline" size={16} color={colors.onPrimary} />
-            <Text style={[styles.deleteAllText, { color: colors.onPrimary }]}>Xóa tất cả</Text>
+            <Text style={[styles.deleteAllText, { color: colors.onPrimary }]}>Delete all</Text>
           </TouchableOpacity>
 
           <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Icon name="search-outline" size={20} color={colors.textMuted} />
             <TextInput
-              placeholder="Tìm theo tiêu đề..."
+              placeholder="Search by title..."
               placeholderTextColor={colors.textMuted}
               style={[styles.searchInput, { color: colors.textPrimary }]}
               value={searchText}
@@ -171,11 +154,15 @@ const Delete = ({ navigation }) => {
             />
           </View>
 
-          {filteredNotes.length > 0 ? (
+          {loading ? (
+            <ActivityIndicator color={colors.primary} style={{ marginTop: 30 }} />
+          ) : error ? (
+            <Text style={[styles.statsText, { color: "#ff6b6b", paddingHorizontal: 20 }]}>{error}</Text>
+          ) : filteredNotes.length > 0 ? (
             <FlatList
               data={filteredNotes}
               renderItem={renderItem}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => String(item.id)}
               scrollEnabled={false}
               contentContainerStyle={styles.listContent}
             />
@@ -193,9 +180,9 @@ const Delete = ({ navigation }) => {
                   color={isDark ? colors.primary : "#caa7ff"}
                 />
               </View>
-              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>Thùng rác trống</Text>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>Trash is empty</Text>
               <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                Các ghi chú đã xóa sẽ xuất hiện ở đây
+                Deleted notes will appear here
               </Text>
             </View>
           )}
@@ -227,37 +214,26 @@ const Delete = ({ navigation }) => {
               ]}
               onPress={() => {}}
             >
-              <View
-                style={[
-                  styles.modalIcon,
-                  { backgroundColor: colors.surfaceSoft },
-                ]}
-              >
+              <View style={[styles.modalIcon, { backgroundColor: colors.surfaceSoft }]}>
                 <Icon name="trash-outline" size={28} color={colors.primary} />
               </View>
-              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Làm trống thùng rác?</Text>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Empty trash?</Text>
               <Text style={[styles.modalText, { color: colors.textMuted }]}>
-                Tất cả ghi chú sẽ bị xóa vĩnh viễn và không thể khôi phục.
+                All notes will be permanently deleted and cannot be restored.
               </Text>
 
               <View style={styles.modalActions}>
                 <TouchableOpacity
-                  style={[
-                    styles.modalCancel,
-                    { borderColor: colors.border, backgroundColor: colors.surfaceSoft },
-                  ]}
+                  style={[styles.modalCancel, { borderColor: colors.border, backgroundColor: colors.surfaceSoft }]}
                   onPress={() => setShowDeleteAllModal(false)}
                 >
-                  <Text style={[styles.modalCancelText, { color: colors.textPrimary }]}>Hủy</Text>
+                  <Text style={[styles.modalCancelText, { color: colors.textPrimary }]}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.modalConfirm,
-                    { backgroundColor: colors.primary },
-                  ]}
+                  style={[styles.modalConfirm, { backgroundColor: colors.primary }]}
                   onPress={handleDeleteAll}
                 >
-                  <Text style={[styles.modalConfirmText, { color: colors.onPrimary }]}>Xóa tất cả</Text>
+                  <Text style={[styles.modalConfirmText, { color: colors.onPrimary }]}>Delete all</Text>
                 </TouchableOpacity>
               </View>
             </Pressable>

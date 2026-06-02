@@ -4,10 +4,10 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { useAppTheme } from "../theme/AppTheme";
 
 const tabs = [
-  { key: "Home", label: "Ghi chú", icon: "document-outline", activeIcon: "document" },
-  { key: "Shared", label: "Chia sẻ", icon: "share-social-outline", activeIcon: "share-social" },
-  { key: "Delete", label: "Thùng rác", icon: "trash-outline", activeIcon: "trash" },
-  { key: "Profile", label: "Tài khoản", icon: "person-outline", activeIcon: "person" },
+  { key: "Home", label: "Notes", icon: "document-outline", activeIcon: "document" },
+  { key: "Shared", label: "Shared", icon: "share-social-outline", activeIcon: "share-social" },
+  { key: "Delete", label: "Trash", icon: "trash-outline", activeIcon: "trash" },
+  { key: "Profile", label: "Account", icon: "person-outline", activeIcon: "person" },
 ];
 
 const AppBottomTab = ({ navigation, activeTab }) => {
