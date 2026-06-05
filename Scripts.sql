@@ -8,9 +8,10 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     status ENUM('active', 'inactive') DEFAULT 'active',
-    logged_in_time TIMESTAMP NULL,
-    logged_out_time TIMESTAMP NULL,
-    avatar_url TEXT,
+    is_logged_in ENUM('yes', 'no') DEFAULT 'no',
+    logged_in_time TIMESTAMP NULL COMMENT 'Thoi gian dang nhap gan nhat',
+    logged_out_time TIMESTAMP NULL COMMENT 'Thoi gian dang xuat gan nhat',
+    avatar_url MEDIUMTEXT COMMENT 'Avatar base64 hoac URL anh',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_username (username)

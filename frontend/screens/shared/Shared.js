@@ -13,6 +13,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { styles } from "./SharedStyle";
 import { useAppTheme } from "../../theme/AppTheme";
 import AppHeader from "../../components/AppHeader";
@@ -26,6 +27,7 @@ const formatDate = (value) => {
 
 const Shared = ({ navigation }) => {
   const { colors, isDark } = useAppTheme();
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { items: sharedNotes, loading, error } = useSelector((state) => state.shared);
   const [searchText, setSearchText] = useState("");
@@ -49,7 +51,7 @@ const Shared = ({ navigation }) => {
       : index % 2 === 0
         ? ["#FFF8ED", "#C7D7E5"]
         : ["#FFF8ED", "#E8C4C4"];
-    const permission = item.can_edit || item.shared_can_edit ? "Can edit" : "View only";
+    const permission = item.can_edit || item.shared_can_edit ? t("common.canEdit") : t("common.viewOnly");
 
     return (
       <TouchableOpacity
@@ -75,7 +77,7 @@ const Shared = ({ navigation }) => {
 
           <Text style={[styles.noteTitle, { color: colors.textPrimary }]}>{item.title}</Text>
           <Text style={[styles.noteContent, { color: colors.textSecondary }]} numberOfLines={2}>
-            {item.content || "No content yet"}
+            {item.content || t("home.noContent")}
           </Text>
 
           <View style={styles.cardFooter}>
@@ -92,7 +94,7 @@ const Shared = ({ navigation }) => {
               </Text>
             </View>
           </View>
-          <Text style={[styles.clickDetail, { color: colors.textMuted }]}>Tap to view details</Text>
+          <Text style={[styles.clickDetail, { color: colors.textMuted }]}>{t("home.tapDetails")}</Text>
         </LinearGradient>
       </TouchableOpacity>
     );
@@ -109,16 +111,16 @@ const Shared = ({ navigation }) => {
           contentContainerStyle={{ paddingBottom: 100 }}
         >
           <View style={styles.titleSection}>
-            <Text style={[styles.mainTitle, { color: colors.textPrimary }]}>Shared notes</Text>
+            <Text style={[styles.mainTitle, { color: colors.textPrimary }]}>{t("shared.title")}</Text>
             <Text style={[styles.statsText, { color: colors.textMuted }]}>
-              {sharedNotes.length} notes
+              {t("shared.count", { count: sharedNotes.length })}
             </Text>
           </View>
 
           <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Icon name="search-outline" size={20} color={colors.textMuted} />
             <TextInput
-              placeholder="Search by title..."
+              placeholder={t("common.searchByTitle")}
               placeholderTextColor={colors.textMuted}
               style={[styles.searchInput, { color: colors.textPrimary }]}
               value={searchText}

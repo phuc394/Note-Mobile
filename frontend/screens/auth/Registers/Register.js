@@ -14,12 +14,14 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { styles } from "./RegisterStyle";
 import { useAppTheme } from "../../../theme/AppTheme";
 import { registerUser } from "../../../redux/authSlice";
 
 const Register = ({ navigation }) => {
   const { colors, isDark } = useAppTheme();
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
@@ -56,30 +58,30 @@ const Register = ({ navigation }) => {
                 </LinearGradient>
               </View>
 
-              <Text style={[styles.title, { color: colors.textPrimary }]}>Create an account</Text>
-              <Text style={[styles.subtitle, { color: colors.textMuted }]}>Enter your information to sign up</Text>
+              <Text style={[styles.title, { color: colors.textPrimary }]}>{t("auth.createAccountTitle")}</Text>
+              <Text style={[styles.subtitle, { color: colors.textMuted }]}>{t("auth.createAccountSubtitle")}</Text>
 
               <View style={[styles.tabContainer, { backgroundColor: colors.surfaceSoft }]}>
                 <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate("Login")}>
                   <Icon name="log-in-outline" size={18} color={colors.tabInactive} />
-                  <Text style={[styles.tabText, { color: colors.tabInactive }]}>Sign in</Text>
+                  <Text style={[styles.tabText, { color: colors.tabInactive }]}>{t("auth.signIn")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.tab, styles.tabActive, { backgroundColor: colors.primary, borderColor: colors.border }]}>
                   <Icon name="person-add" size={18} color={colors.onPrimary} />
-                  <Text style={[styles.tabText, styles.tabTextActive, { color: colors.onPrimary }]}>Sign up</Text>
+                  <Text style={[styles.tabText, styles.tabTextActive, { color: colors.onPrimary }]}>{t("auth.signUp")}</Text>
                 </TouchableOpacity>
               </View>
 
               <InputField
-                label="Full name"
+                label={t("auth.fullName")}
                 icon="person-outline"
-                placeholder="Nguyen Van A"
+                placeholder={t("auth.namePlaceholder")}
                 value={username}
                 onChangeText={setUsername}
                 colors={colors}
               />
               <InputField
-                label="Email"
+                label={t("common.email")}
                 icon="mail-outline"
                 placeholder="your@email.com"
                 keyboardType="email-address"
@@ -88,9 +90,9 @@ const Register = ({ navigation }) => {
                 colors={colors}
               />
               <InputField
-                label="Password"
+                label={t("common.password")}
                 icon="lock-closed-outline"
-                placeholder="At least 6 characters"
+                placeholder={t("auth.passwordMinPlaceholder")}
                 secureTextEntry={!showPassword}
                 isPassword
                 toggleVisible={() => setShowPassword(!showPassword)}
@@ -99,9 +101,9 @@ const Register = ({ navigation }) => {
                 colors={colors}
               />
               <InputField
-                label="Confirm password"
+                label={t("auth.confirmPassword")}
                 icon="lock-closed-outline"
-                placeholder="Re-enter your password"
+                placeholder={t("auth.confirmPasswordPlaceholder")}
                 secureTextEntry={!showPassword}
                 isPassword
                 toggleVisible={() => setShowPassword(!showPassword)}
@@ -129,7 +131,7 @@ const Register = ({ navigation }) => {
                   ) : (
                     <>
                       <Icon name="person-add" size={20} color={colors.onPrimary} style={{ marginRight: 10 }} />
-                      <Text style={[styles.buttonText, { color: colors.onPrimary }]}>Create account</Text>
+                      <Text style={[styles.buttonText, { color: colors.onPrimary }]}>{t("auth.createAccount")}</Text>
                     </>
                   )}
                 </LinearGradient>

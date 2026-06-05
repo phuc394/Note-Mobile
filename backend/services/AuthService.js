@@ -60,28 +60,43 @@ export async function login(identifier, password) {
     { expiresIn: process.env.JWT_EXPIRE }
   );
 
+  await db.query(
+    "UPDATE users SET is_logged_in = 'yes', logged_in_time = CURRENT_TIMESTAMP WHERE id = ?",
+    [user.id]
+  );
+  const updatedUser = await getUserById(user.id);
+
   return {
     token,
-    user: {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-    },
+    user: updatedUser,
   };
 }
 
-export async function logOut() {
-  // In a stateless JWT architecture, the server doesn't maintain session state.
-  // Logout is primarily handled on the client side by discarding the token.
-  // This function returns a success message to confirm the logout process 
-  // can proceed on the client.
+export async function logOut(userId) {
+  await db.query(
+    "UPDATE users SET is_logged_in = 'no', logged_out_time = CURRENT_TIMESTAMP WHERE id = ?",
+    [userId]
+  );
+
   return { success: true, message: 'Logged out successfully' };
 }
 
 // Get user by ID
 export async function getUserById(userId) {
   const [results] = await db.query(
-    'SELECT id, username, email, created_at FROM users WHERE id = ?',
+    `
+      SELECT
+        id,
+        username,
+        email,
+        is_logged_in,
+        avatar_url,
+        logged_in_time,
+        logged_out_time,
+        created_at
+      FROM users
+      WHERE id = ?
+    `,
     [userId]
   );
 
@@ -91,10 +106,11 @@ export async function getUserById(userId) {
   return results[0];
 }
 
-export async function updateProfile(userId, username, email) {
+export async function updateProfile(userId, username, email, avatarUrl) {
   const currentUser = await getUserById(userId);
   const nextUsername = username?.trim() || currentUser.username;
   const nextEmail = email?.trim() || currentUser.email;
+  const nextAvatarUrl = avatarUrl === undefined ? currentUser.avatar_url : avatarUrl;
 
   const [existingUsers] = await db.query(
     'SELECT id FROM users WHERE (username = ? OR email = ?) AND id <> ?',
@@ -106,15 +122,15 @@ export async function updateProfile(userId, username, email) {
   }
 
   await db.query(
-    'UPDATE users SET username = ?, email = ? WHERE id = ?',
-    [nextUsername, nextEmail, userId]
+    'UPDATE users SET username = ?, email = ?, avatar_url = ? WHERE id = ?',
+    [nextUsername, nextEmail, nextAvatarUrl, userId]
   );
 
   return getUserById(userId);
 }
 
-export async function updateUser(userId, username, email) {
-  return updateProfile(userId, username, email);
+export async function updateUser(userId, username, email, avatarUrl) {
+  return updateProfile(userId, username, email, avatarUrl);
 }
 
 // Verify JWT token

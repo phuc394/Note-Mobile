@@ -5,7 +5,7 @@ import { socketCorsOrigin } from './config/cors.js';
 import { validateEnv } from './config/env.js';
 import app from './app.js';
 import { setSocketServer } from './socket.js';
-import { getSharedNoteAccess } from './services/SharedService.js';
+import { GetNote } from './services/NoteService.js';
 
 validateEnv();
 
@@ -38,7 +38,7 @@ io.use((socket, next) => {
 io.on('connection', (socket) => {
   socket.on('shared:join', async ({ noteId }, callback) => {
     try {
-      await getSharedNoteAccess(noteId, socket.user.id);
+      await GetNote(noteId, socket.user.id);
       socket.join(`note:${noteId}`);
       callback?.({ ok: true });
     } catch (error) {
@@ -48,6 +48,26 @@ io.on('connection', (socket) => {
 
   socket.on('shared:leave', ({ noteId }) => {
     socket.leave(`note:${noteId}`);
+  });
+
+  socket.on('shared:note-draft', async ({ noteId, title, content }, callback) => {
+    try {
+      const note = await GetNote(noteId, socket.user.id);
+      if (!note.is_owner && !note.shared_can_edit) {
+        callback?.({ ok: false, message: 'You only have permission to view this note' });
+        return;
+      }
+
+      socket.to(`note:${noteId}`).emit('shared:note-draft', {
+        note_id: Number(noteId),
+        editor_id: socket.user.id,
+        title: note.is_owner ? title : undefined,
+        content: content ?? '',
+      });
+      callback?.({ ok: true });
+    } catch (error) {
+      callback?.({ ok: false, message: error.message });
+    }
   });
 });
 

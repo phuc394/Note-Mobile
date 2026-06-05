@@ -3,10 +3,12 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { useAppTheme } from "../theme/AppTheme";
 
 const AppHeader = ({ navigation, showBack = false, backTarget = "Home" }) => {
   const { colors, isDark, toggleTheme } = useAppTheme();
+  const { t } = useTranslation();
   const user = useSelector((state) => state.auth.user);
 
   return (
@@ -16,8 +18,8 @@ const AppHeader = ({ navigation, showBack = false, backTarget = "Home" }) => {
           <Icon name="sparkles" size={18} color={colors.onPrimary} />
         </LinearGradient>
         <View style={{ marginLeft: 10 }}>
-          <Text style={[styles.appName, { color: colors.textPrimary }]}>Notes</Text>
-          <Text style={[styles.userEmail, { color: colors.textMuted }]}>{user?.email ?? "Not signed in"}</Text>
+          <Text style={[styles.appName, { color: colors.textPrimary }]}>{t("app.name")}</Text>
+          <Text style={[styles.userEmail, { color: colors.textMuted }]}>{user?.email ?? t("app.notSignedIn")}</Text>
         </View>
       </View>
 

@@ -9,6 +9,7 @@ router.get('/all/:user_id', authMiddleware, NoteController.GetAllNotes);
 router.get('/shared', authMiddleware, NoteController.GetSharedNotes);
 router.get('/search', authMiddleware, NoteController.searchNotes);
 router.get('/get/:id', authMiddleware, NoteController.GetNote);
+router.get('/:id/invite', authMiddleware, NoteController.GetNoteInvites);
 
 router.post('/create', authMiddleware, NoteController.CreateNote);
 router.post('/:id/invite', authMiddleware, NoteController.InviteUserToNote);

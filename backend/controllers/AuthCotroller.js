@@ -83,8 +83,8 @@ export async function getProfile(req, res) {
 export async function updateProfile(req, res) {
   try {
     const userId = req.user.id;
-    const { username, email } = req.body;
-    const updatedUser = await AuthService.updateProfile(userId, username, email);
+    const { username, email, avatar_url } = req.body;
+    const updatedUser = await AuthService.updateProfile(userId, username, email, avatar_url);
 
     return res.status(200).json({
       message: 'User profile updated successfully',
@@ -99,7 +99,7 @@ export async function updateProfile(req, res) {
 
 export async function logOut(req, res) {
   try {
-    const result = await AuthService.logOut();
+    const result = await AuthService.logOut(req.user.id);
     return res.status(200).json(result);
   } catch (error) {
     return res.status(500).json({

@@ -9,10 +9,14 @@ import {
   StatusBar,
   FlatList,
   ActivityIndicator,
+  Platform,
+  useWindowDimensions,
+  UIManager,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { styles } from "./HomeStyle";
 import { useAppTheme } from "../../theme/AppTheme";
 import AppHeader from "../../components/AppHeader";
@@ -27,11 +31,18 @@ const formatDate = (value) => {
   return new Date(value).toISOString().slice(0, 10);
 };
 
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 const Home = ({ navigation }) => {
   const { colors, isDark } = useAppTheme();
+  const { t } = useTranslation();
+  const { width } = useWindowDimensions();
   const dispatch = useDispatch();
   const { items: notes, loading, error } = useSelector((state) => state.notes);
   const [searchText, setSearchText] = useState("");
+  const noteCardWidth = (width - 42) / 2;
 
   useEffect(() => {
     dispatch(fetchNotes());
@@ -47,9 +58,18 @@ const Home = ({ navigation }) => {
   }, [notes, searchText]);
 
   const pinnedCount = notes.filter((note) => note.is_pinned).length;
+  const hasPinnedNotes = pinnedCount > 0;
+  const pinnedNotes = useMemo(
+    () => filteredNotes.filter((note) => note.is_pinned),
+    [filteredNotes]
+  );
+  const otherNotes = useMemo(
+    () => filteredNotes.filter((note) => !note.is_pinned),
+    [filteredNotes]
+  );
 
   const handleCreate = async () => {
-    const title = `New note ${notes.length + 1}`;
+    const title = t("home.newNoteTitle", { count: notes.length + 1 });
     try {
       const note = await dispatch(createNote({ title, content: "" })).unwrap();
       navigation.navigate("NoteDetails", { noteId: note.id });
@@ -58,13 +78,27 @@ const Home = ({ navigation }) => {
     }
   };
 
+  const handleTogglePin = (item) => {
+    dispatch(togglePinNote({ id: item.id, is_pinned: !item.is_pinned }));
+  };
+
+  const handleDelete = (id) => {
+    dispatch(deleteNote(id));
+  };
+
   const renderNoteCard = ({ item, index }) => {
     const palette = isDark ? darkCardColors : lightCardColors;
-    const type = item.is_public ? "Public" : "Private";
+    const type = item.is_public ? t("home.public") : t("home.private");
 
     return (
       <TouchableOpacity
-        style={[styles.noteCard, { backgroundColor: palette[index % palette.length] }]}
+        style={[
+          styles.noteCard,
+          {
+            width: noteCardWidth,
+            backgroundColor: palette[index % palette.length],
+          },
+        ]}
         onPress={() => navigation.navigate("NoteDetails", { noteId: item.id })}
         activeOpacity={0.88}
       >
@@ -80,13 +114,13 @@ const Home = ({ navigation }) => {
           <View style={styles.actionIcons}>
             <TouchableOpacity
               style={[styles.iconCircle, { backgroundColor: colors.surfaceSoft }]}
-              onPress={() => dispatch(togglePinNote({ id: item.id, is_pinned: !item.is_pinned }))}
+              onPress={() => handleTogglePin(item)}
             >
               <Icon name={item.is_pinned ? "pin" : "pin-outline"} size={14} color={colors.textPrimary} />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.iconCircle, { backgroundColor: isDark ? colors.accentStrong : "#ff5252" }]}
-              onPress={() => dispatch(deleteNote(item.id))}
+              onPress={() => handleDelete(item.id)}
             >
               <Icon name="trash" size={14} color={colors.onPrimary} />
             </TouchableOpacity>
@@ -97,18 +131,29 @@ const Home = ({ navigation }) => {
           {item.title}
         </Text>
         <Text style={[styles.noteContent, { color: colors.textSecondary }]} numberOfLines={3}>
-          {item.content || "No content yet"}
+          {item.content || t("home.noContent")}
         </Text>
 
         <View style={styles.cardFooter}>
           <Text style={[styles.noteDate, { color: colors.textMuted }]}>
             {formatDate(item.updated_at || item.created_at)}
           </Text>
-          <Text style={[styles.detailText, { color: colors.textMuted }]}>Tap to view details</Text>
+          <Text style={[styles.detailText, { color: colors.textMuted }]}>{t("home.tapDetails")}</Text>
         </View>
       </TouchableOpacity>
     );
   };
+
+  const renderNotesGrid = (items) => (
+    <FlatList
+      data={items}
+      renderItem={renderNoteCard}
+      keyExtractor={(item) => String(item.id)}
+      numColumns={2}
+      scrollEnabled={false}
+      columnWrapperStyle={styles.row}
+    />
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -122,15 +167,15 @@ const Home = ({ navigation }) => {
         >
           <View style={styles.titleSection}>
             <View>
-              <Text style={[styles.mainTitle, { color: colors.textPrimary }]}>My notes</Text>
+              <Text style={[styles.mainTitle, { color: colors.textPrimary }]}>{t("home.myNotes")}</Text>
               <Text style={[styles.statsText, { color: colors.textMuted }]}>
-                {notes.length} notes - {pinnedCount} pinned
+                {t("home.stats", { count: notes.length, pinned: pinnedCount })}
               </Text>
             </View>
             <TouchableOpacity style={styles.btnCreateWrapper} onPress={handleCreate}>
               <LinearGradient colors={colors.buttonGradient} style={styles.btnCreate}>
                 <Icon name="add" size={20} color={colors.onPrimary} />
-                <Text style={[styles.btnCreateText, { color: colors.onPrimary }]}>New</Text>
+                <Text style={[styles.btnCreateText, { color: colors.onPrimary }]}>{t("home.new")}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -138,7 +183,7 @@ const Home = ({ navigation }) => {
           <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Icon name="search-outline" size={20} color={colors.textMuted} />
             <TextInput
-              placeholder="Search by title..."
+              placeholder={t("common.searchByTitle")}
               placeholderTextColor={colors.textMuted}
               style={[styles.searchInput, { color: colors.textPrimary }]}
               value={searchText}
@@ -150,18 +195,24 @@ const Home = ({ navigation }) => {
             <ActivityIndicator color={colors.primary} style={{ marginTop: 30 }} />
           ) : error ? (
             <Text style={[styles.statsText, { color: "#ff6b6b", paddingHorizontal: 20 }]}>{error}</Text>
+          ) : hasPinnedNotes ? (
+            <View>
+              {pinnedNotes.length > 0 ? (
+                <View style={styles.notesSection}>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{t("home.pinnedNote")}</Text>
+                  {renderNotesGrid(pinnedNotes)}
+                </View>
+              ) : null}
+
+              {otherNotes.length > 0 ? (
+                <View style={styles.notesSection}>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{t("home.otherNotes")}</Text>
+                  {renderNotesGrid(otherNotes)}
+                </View>
+              ) : null}
+            </View>
           ) : (
-            <FlatList
-              data={filteredNotes}
-              renderItem={renderNoteCard}
-              keyExtractor={(item) => String(item.id)}
-              numColumns={2}
-              scrollEnabled={false}
-              columnWrapperStyle={{
-                justifyContent: "space-between",
-                paddingHorizontal: 20,
-              }}
-            />
+            renderNotesGrid(filteredNotes)
           )}
         </ScrollView>
 

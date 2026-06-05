@@ -14,12 +14,14 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { styles } from "./LoginStyle";
 import { useAppTheme } from "../../../theme/AppTheme";
 import { loginUser } from "../../../redux/authSlice";
 
 const Login = ({ navigation }) => {
   const { colors, isDark } = useAppTheme();
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
@@ -54,22 +56,22 @@ const Login = ({ navigation }) => {
                 </LinearGradient>
               </View>
 
-              <Text style={[styles.title, { color: colors.textPrimary }]}>Welcome back</Text>
-              <Text style={[styles.subtitle, { color: colors.textMuted }]}>Sign in to your account</Text>
+              <Text style={[styles.title, { color: colors.textPrimary }]}>{t("auth.welcomeBack")}</Text>
+              <Text style={[styles.subtitle, { color: colors.textMuted }]}>{t("auth.signInSubtitle")}</Text>
 
               <View style={[styles.tabContainer, { backgroundColor: colors.surfaceSoft }]}>
                 <TouchableOpacity style={[styles.tab, styles.tabActive, { backgroundColor: colors.primary, borderColor: colors.border }]}>
                   <Icon name="log-in" size={18} color={colors.onPrimary} />
-                  <Text style={[styles.tabText, styles.tabTextActive, { color: colors.onPrimary }]}>Sign in</Text>
+                  <Text style={[styles.tabText, styles.tabTextActive, { color: colors.onPrimary }]}>{t("auth.signIn")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate("Register")}>
                   <Icon name="person-add-outline" size={18} color={colors.tabInactive} />
-                  <Text style={[styles.tabText, { color: colors.tabInactive }]}>Sign up</Text>
+                  <Text style={[styles.tabText, { color: colors.tabInactive }]}>{t("auth.signUp")}</Text>
                 </TouchableOpacity>
               </View>
 
               <InputField
-                label="Email"
+                label={t("common.email")}
                 icon="mail-outline"
                 placeholder="your@email.com"
                 keyboardType="email-address"
@@ -81,9 +83,9 @@ const Login = ({ navigation }) => {
 
               <View style={{ width: "100%" }}>
                 <InputField
-                  label="Password"
+                  label={t("common.password")}
                   icon="lock-closed-outline"
-                  placeholder="Enter your password"
+                  placeholder={t("auth.passwordPlaceholder")}
                   secureTextEntry={!showPassword}
                   isPassword
                   toggleVisible={() => setShowPassword(!showPassword)}
@@ -92,9 +94,6 @@ const Login = ({ navigation }) => {
                   onChangeText={setPassword}
                   colors={colors}
                 />
-                <TouchableOpacity style={styles.forgotBtn}>
-                  <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot password?</Text>
-                </TouchableOpacity>
               </View>
 
               {error ? <Text style={[styles.forgotText, { color: "#ff6b6b" }]}>{error}</Text> : null}
@@ -116,26 +115,12 @@ const Login = ({ navigation }) => {
                   ) : (
                     <>
                       <Icon name="log-in" size={20} color={colors.onPrimary} style={{ marginRight: 10 }} />
-                      <Text style={[styles.buttonText, { color: colors.onPrimary }]}>Sign in</Text>
+                      <Text style={[styles.buttonText, { color: colors.onPrimary }]}>{t("auth.signIn")}</Text>
                     </>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
 
-              <View style={styles.dividerContainer}>
-                <View style={[styles.divider, { backgroundColor: colors.border }]} />
-                <Text style={[styles.dividerText, { color: colors.textMuted }]}>Or</Text>
-                <View style={[styles.divider, { backgroundColor: colors.border }]} />
-              </View>
-
-              <View style={styles.socialContainer}>
-                <TouchableOpacity style={[styles.socialBtn, { backgroundColor: colors.surfaceSoft, borderColor: colors.border }]}>
-                  <Icon name="logo-google" size={24} color={colors.onPrimary} />
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.socialBtn, { backgroundColor: colors.surfaceSoft, borderColor: colors.border }]}>
-                  <Icon name="logo-facebook" size={24} color={colors.onPrimary} />
-                </TouchableOpacity>
-              </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

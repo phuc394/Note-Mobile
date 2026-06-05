@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import AppNavigator from "./navigation/Navigation.js";
 import { AppThemeProvider, useAppTheme } from "./theme/AppTheme";
+import "./locales/i18n";
 
 const AppShell = () => {
   const { colors } = useAppTheme();

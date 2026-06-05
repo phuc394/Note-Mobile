@@ -1,0 +1,107 @@
+{
+  "app": {
+    "name": "Ghi chú",
+    "notSignedIn": "Chưa đăng nhập"
+  },
+  "common": {
+    "cancel": "Hủy",
+    "deleteAll": "Xóa tất cả",
+    "email": "Email",
+    "loading": "Đang tải",
+    "notes": "ghi chú",
+    "or": "Hoặc",
+    "password": "Mật khẩu",
+    "save": "Lưu",
+    "saveChanges": "Lưu thay đổi",
+    "searchByTitle": "Tìm theo tiêu đề...",
+    "viewOnly": "Chỉ xem",
+    "canEdit": "Có thể sửa"
+  },
+  "tabs": {
+    "notes": "Ghi chú",
+    "shared": "Chia sẻ",
+    "trash": "Thùng rác",
+    "account": "Tài khoản"
+  },
+  "auth": {
+    "welcomeBack": "Chào mừng trở lại",
+    "signInSubtitle": "Đăng nhập vào tài khoản của bạn",
+    "signIn": "Đăng nhập",
+    "signUp": "Đăng ký",
+    "forgotPassword": "Quên mật khẩu?",
+    "createAccountTitle": "Tạo tài khoản",
+    "createAccountSubtitle": "Nhập thông tin để đăng ký",
+    "fullName": "Họ và tên",
+    "namePlaceholder": "Nguyễn Văn A",
+    "passwordPlaceholder": "Nhập mật khẩu",
+    "passwordMinPlaceholder": "Tối thiểu 6 ký tự",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "confirmPasswordPlaceholder": "Nhập lại mật khẩu",
+    "createAccount": "Tạo tài khoản"
+  },
+  "home": {
+    "myNotes": "Ghi chú của tôi",
+    "stats": "{{count}} ghi chú - {{pinned}} đã ghim",
+    "new": "Mới",
+    "public": "Công khai",
+    "private": "Riêng tư",
+    "noContent": "Chưa có nội dung",
+    "tapDetails": "Nhấn để xem chi tiết",
+    "pinnedNote": "Ghi chú đã ghim",
+    "otherNotes": "Ghi chú khác",
+    "newNoteTitle": "Ghi chú mới {{count}}"
+  },
+  "shared": {
+    "title": "Ghi chú được chia sẻ",
+    "count": "{{count}} ghi chú"
+  },
+  "trash": {
+    "title": "Thùng rác",
+    "stats": "{{count}} ghi chú - Tự xóa sau 30 ngày",
+    "deleted": "Đã xóa: {{date}}",
+    "restore": "Khôi phục",
+    "emptyTitle": "Thùng rác trống",
+    "emptyText": "Ghi chú đã xóa sẽ xuất hiện tại đây",
+    "emptyTrashTitle": "Dọn thùng rác?",
+    "emptyTrashText": "Tất cả ghi chú sẽ bị xóa vĩnh viễn và không thể khôi phục."
+  },
+  "note": {
+    "notSaved": "Chưa lưu",
+    "untitled": "Ghi chú chưa đặt tên",
+    "lastUpdated": "Cập nhật lần cuối {{date}}",
+    "liveUpdate": "Đang cập nhật trực tiếp",
+    "saved": "Đã lưu",
+    "editing": "Đang chỉnh sửa...",
+    "saving": "Đang lưu...",
+    "saveFailed": "Lưu thất bại",
+    "visibilityOwnerOnly": "Chỉ chủ ghi chú mới có thể đổi trạng thái hiển thị.",
+    "inviteBar": "Mời người khác vào ghi chú công khai này",
+    "invite": "Mời",
+    "inviteByEmail": "Mời qua email",
+    "invitedGuests": "Khách đã mời",
+    "noGuests": "Chưa mời ai.",
+    "friendEmail": "banbe@email.com",
+    "allowEditing": "Cho phép chỉnh sửa",
+    "offMeansViewOnly": "Tắt nghĩa là chỉ xem",
+    "sendInvite": "Gửi lời mời",
+    "enterEmail": "Vui lòng nhập địa chỉ email.",
+    "inviteSent": "Đã gửi email mời.",
+    "inviteFailed": "Gửi lời mời thất bại.",
+    "guestRemoved": "Đã xóa khách mời.",
+    "removeGuestFailed": "Xóa khách mời thất bại.",
+    "startWriting": "Bắt đầu viết..."
+  },
+  "profile": {
+    "pageLabel": "Hồ sơ",
+    "title": "Thông tin tài khoản",
+    "displayName": "Tên hiển thị",
+    "joined": "Ngày tham gia",
+    "language": "Ngôn ngữ",
+    "edit": "Sửa",
+    "logout": "Đăng xuất",
+    "confirmLogout": "Xác nhận đăng xuất",
+    "confirmLogoutText": "Bạn có chắc muốn đăng xuất?",
+    "vietnamese": "Tiếng Việt",
+    "english": "English"
+  }
+}
