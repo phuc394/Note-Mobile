@@ -1,18 +1,9 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import handlebars from 'handlebars';
-import { Resend } from 'resend';
+import emailjs, { EmailJSResponseStatus } from '@emailjs/nodejs';
 import { isProduction } from '../config/env.js';
 import connection from '../config/database.js';
 import { emitSharedNoteUpdated } from '../socket.js';
 
 const db = connection.promise();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const inviteTemplatePath = path.join(__dirname, '../templates/noteInvite.hbs');
-let resendClient;
 
 async function getUserById(userId) {
   const [users] = await db.query(
@@ -32,20 +23,12 @@ async function getCurrentUser(userId) {
   return user;
 }
 
-function getResendClient() {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error('RESEND_API_KEY is required to send invite emails');
+function getRequiredEnv(name) {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`${name} is required to send invite emails`);
   }
-
-  if (!resendClient) {
-    resendClient = new Resend(process.env.RESEND_API_KEY);
-  }
-
-  return resendClient;
-}
-
-function getInviteSender() {
-  return process.env.RESEND_FROM_EMAIL ?? 'Note Mobile <onboarding@resend.dev>';
+  return value;
 }
 
 function toBoolean(value) {
@@ -67,26 +50,31 @@ function getFrontendUrl() {
 }
 
 async function sendInviteEmail({ invitedEmail, note, inviter, canEdit }) {
-  const source = await fs.readFile(inviteTemplatePath, 'utf8');
-  const template = handlebars.compile(source);
   const frontendUrl = getFrontendUrl();
   const inviteUrl = `${frontendUrl.replace(/\/$/, '')}/notes/${note.id}`;
-  const html = template({
-    inviteUrl,
-    noteTitle: note.title,
-    inviterName: inviter.username,
-    permission: canEdit ? 'view and edit' : 'view only',
-  });
 
-  const { error } = await getResendClient().emails.send({
-    from: getInviteSender(),
-    to: [invitedEmail],
-    subject: `${inviter.username} invited you to a note`,
-    html,
-  });
-
-  if (error) {
-    const sendError = new Error(error.message ?? 'Failed to send invite email');
+  try {
+    await emailjs.send(
+      getRequiredEnv('EMAILJS_SERVICE_ID'),
+      getRequiredEnv('EMAILJS_TEMPLATE_ID'),
+      {
+        email: invitedEmail,
+        inviter_name: inviter.username,
+        note_title: note.title,
+        invite_url: inviteUrl,
+        permission: canEdit ? 'view and edit' : 'view only',
+      },
+      {
+        publicKey: getRequiredEnv('EMAILJS_PUBLIC_KEY'),
+        privateKey: process.env.EMAILJS_PRIVATE_KEY,
+      },
+    );
+  } catch (error) {
+    const sendError = new Error(
+      error instanceof EmailJSResponseStatus
+        ? `EmailJS failed: ${error.text}`
+        : error.message ?? 'Failed to send invite email',
+    );
     sendError.statusCode = 502;
     throw sendError;
   }
@@ -255,6 +243,29 @@ export async function InviteUserToNote(id, userId, invitedEmail, canEdit = false
   return { note_id: Number(id), invited_gmail: email, can_edit: toBoolean(canEdit) };
 }
 
+export async function GetNoteInvites(id, userId) {
+  await getOwnedNote(id, userId);
+  const [invites] = await db.query(
+    `
+      SELECT
+        sn.id,
+        sn.note_id,
+        sn.invited_gmail,
+        sn.can_edit,
+        sn.created_at,
+        u.username,
+        u.email AS user_email
+      FROM shared_notes sn
+      LEFT JOIN users u ON LOWER(u.email) = LOWER(sn.invited_gmail)
+      WHERE sn.note_id = ?
+      ORDER BY sn.created_at DESC
+    `,
+    [id],
+  );
+
+  return invites;
+}
+
 export async function UpdateInvitePermission(id, userId, invitedEmail, canEdit) {
   const email = invitedEmail?.trim().toLowerCase();
   if (!email) {
@@ -283,6 +294,13 @@ export async function RemoveInvite(id, userId, invitedEmail) {
     'DELETE FROM shared_notes WHERE note_id = ? AND LOWER(invited_gmail) = LOWER(?)',
     [id, email],
   );
+  if (result.affectedRows > 0) {
+    emitSharedNoteUpdated(id, {
+      action: 'access-revoked',
+      note_id: Number(id),
+      invited_gmail: email,
+    });
+  }
   return result;
 }
 
@@ -384,5 +402,10 @@ export async function EditNote(id, userId, title, content) {
       content: nextContent,
     },
   });
-  return result;
+  return {
+    id: Number(id),
+    title: nextTitle,
+    content: nextContent,
+    affectedRows: result.affectedRows,
+  };
 }

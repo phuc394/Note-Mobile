@@ -1,7 +1,4 @@
-import { StyleSheet, Dimensions } from "react-native";
-
-const { width } = Dimensions.get("window");
-const cardWidth = (width - 60) / 2;
+import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   container: {
@@ -69,13 +66,21 @@ export const styles = StyleSheet.create({
 
   row: {
     justifyContent: "space-between",
+    paddingHorizontal: 16,
+  },
+  notesSection: {
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "800",
     paddingHorizontal: 20,
+    marginBottom: 12,
   },
   noteCard: {
-    width: cardWidth,
-    borderRadius: 22,
-    padding: 15,
-    marginBottom: 20,
+    borderRadius: 18,
+    padding: 12,
+    marginBottom: 14,
   },
   cardHeader: {
     flexDirection: "row",
@@ -86,12 +91,13 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#EADBC8",
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: 10,
+    flexShrink: 1,
   },
   typeText: { fontSize: 10, color: "#5C4033", marginLeft: 4, fontWeight: "600" },
-  actionIcons: { flexDirection: "row", gap: 6 },
+  actionIcons: { flexDirection: "row", gap: 4, marginLeft: 4 },
   iconCircle: {
     width: 26,
     height: 26,

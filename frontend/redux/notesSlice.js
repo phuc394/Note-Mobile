@@ -56,8 +56,8 @@ export const updateNote = createAsyncThunk(
   "notes/update",
   async ({ id, title, content }, { rejectWithValue }) => {
     try {
-      await api.put(`/notes/edit/${id}`, { title, content });
-      return { id, title, content };
+      const { data } = await api.put(`/notes/edit/${id}`, { title, content });
+      return data.note ?? { id, title, content };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }
@@ -88,11 +88,49 @@ export const togglePublicNote = createAsyncThunk(
   }
 );
 
+export const inviteUserToNote = createAsyncThunk(
+  "notes/invite",
+  async ({ id, email, can_edit }, { rejectWithValue }) => {
+    try {
+      const { data } = await api.post(`/notes/${id}/invite`, { email, can_edit });
+      return data.invite;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
+export const fetchNoteInvites = createAsyncThunk(
+  "notes/fetchInvites",
+  async (id, { rejectWithValue }) => {
+    try {
+      const { data } = await api.get(`/notes/${id}/invite`);
+      return data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
+export const removeNoteInvite = createAsyncThunk(
+  "notes/removeInvite",
+  async ({ id, email }, { rejectWithValue }) => {
+    try {
+      await api.delete(`/notes/${id}/invite/${encodeURIComponent(email)}`);
+      return email;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
 const notesSlice = createSlice({
   name: "notes",
   initialState: {
     items: [],
     selectedNote: null,
+    invites: [],
+    invitesLoading: false,
     loading: false,
     error: null,
   },
@@ -181,8 +219,53 @@ const notesSlice = createSlice({
         if (String(state.selectedNote?.id) === String(action.payload.id)) {
           state.selectedNote.is_public = action.payload.is_public ? 1 : 0;
         }
+        if (!action.payload.is_public) {
+          state.invites = [];
+        }
       })
       .addCase(togglePublicNote.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      .addCase(inviteUserToNote.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(inviteUserToNote.fulfilled, (state, action) => {
+        const nextInvite = action.payload;
+        state.invites = [
+          nextInvite,
+          ...state.invites.filter(
+            (invite) =>
+              String(invite.invited_gmail).toLowerCase() !==
+              String(nextInvite.invited_gmail).toLowerCase()
+          ),
+        ];
+      })
+      .addCase(inviteUserToNote.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      .addCase(fetchNoteInvites.pending, (state) => {
+        state.invitesLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchNoteInvites.fulfilled, (state, action) => {
+        state.invitesLoading = false;
+        state.invites = action.payload;
+      })
+      .addCase(fetchNoteInvites.rejected, (state, action) => {
+        state.invitesLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(removeNoteInvite.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(removeNoteInvite.fulfilled, (state, action) => {
+        state.invites = state.invites.filter(
+          (invite) =>
+            String(invite.invited_gmail).toLowerCase() !==
+            String(action.payload).toLowerCase()
+        );
+      })
+      .addCase(removeNoteInvite.rejected, (state, action) => {
         state.error = action.payload;
       });
   },

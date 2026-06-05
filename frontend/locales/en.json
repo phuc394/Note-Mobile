@@ -1,0 +1,107 @@
+{
+  "app": {
+    "name": "Notes",
+    "notSignedIn": "Not signed in"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "deleteAll": "Delete all",
+    "email": "Email",
+    "loading": "Loading",
+    "notes": "notes",
+    "or": "Or",
+    "password": "Password",
+    "save": "Save",
+    "saveChanges": "Save changes",
+    "searchByTitle": "Search by title...",
+    "viewOnly": "View only",
+    "canEdit": "Can edit"
+  },
+  "tabs": {
+    "notes": "Notes",
+    "shared": "Shared",
+    "trash": "Trash",
+    "account": "Account"
+  },
+  "auth": {
+    "welcomeBack": "Welcome back",
+    "signInSubtitle": "Sign in to your account",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "forgotPassword": "Forgot password?",
+    "createAccountTitle": "Create an account",
+    "createAccountSubtitle": "Enter your information to sign up",
+    "fullName": "Full name",
+    "namePlaceholder": "Nguyen Van A",
+    "passwordPlaceholder": "Enter your password",
+    "passwordMinPlaceholder": "At least 6 characters",
+    "confirmPassword": "Confirm password",
+    "confirmPasswordPlaceholder": "Re-enter your password",
+    "createAccount": "Create account"
+  },
+  "home": {
+    "myNotes": "My notes",
+    "stats": "{{count}} notes - {{pinned}} pinned",
+    "new": "New",
+    "public": "Public",
+    "private": "Private",
+    "noContent": "No content yet",
+    "tapDetails": "Tap to view details",
+    "pinnedNote": "Pinned Note",
+    "otherNotes": "Other Notes",
+    "newNoteTitle": "New note {{count}}"
+  },
+  "shared": {
+    "title": "Shared notes",
+    "count": "{{count}} notes"
+  },
+  "trash": {
+    "title": "Trash",
+    "stats": "{{count}} notes - Auto-deletes after 30 days",
+    "deleted": "Deleted: {{date}}",
+    "restore": "Restore",
+    "emptyTitle": "Trash is empty",
+    "emptyText": "Deleted notes will appear here",
+    "emptyTrashTitle": "Empty trash?",
+    "emptyTrashText": "All notes will be permanently deleted and cannot be restored."
+  },
+  "note": {
+    "notSaved": "Not saved yet",
+    "untitled": "Untitled note",
+    "lastUpdated": "Last updated {{date}}",
+    "liveUpdate": "Live update",
+    "saved": "Saved",
+    "editing": "Editing...",
+    "saving": "Saving...",
+    "saveFailed": "Save failed",
+    "visibilityOwnerOnly": "Visibility can only be changed by the note owner.",
+    "inviteBar": "Invite someone to this public note",
+    "invite": "Invite",
+    "inviteByEmail": "Invite by email",
+    "invitedGuests": "Invited guests",
+    "noGuests": "No guests invited yet.",
+    "friendEmail": "friend@email.com",
+    "allowEditing": "Allow editing",
+    "offMeansViewOnly": "Off means view only",
+    "sendInvite": "Send invite",
+    "enterEmail": "Please enter an email address.",
+    "inviteSent": "Invite email sent.",
+    "inviteFailed": "Failed to send invite.",
+    "guestRemoved": "Guest removed.",
+    "removeGuestFailed": "Failed to remove guest.",
+    "startWriting": "Start writing..."
+  },
+  "profile": {
+    "pageLabel": "Profile",
+    "title": "Account information",
+    "displayName": "Display name",
+    "joined": "Joined",
+    "language": "Language",
+    "edit": "Edit",
+    "logout": "Log out",
+    "confirmLogout": "Confirm logout",
+    "confirmLogoutText": "Are you sure you want to log out?",
+    "vietnamese": "Tiếng Việt",
+    "english": "English"
+  }
+}

@@ -1,17 +1,19 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useTranslation } from "react-i18next";
 import { useAppTheme } from "../theme/AppTheme";
 
 const tabs = [
-  { key: "Home", label: "Notes", icon: "document-outline", activeIcon: "document" },
-  { key: "Shared", label: "Shared", icon: "share-social-outline", activeIcon: "share-social" },
-  { key: "Delete", label: "Trash", icon: "trash-outline", activeIcon: "trash" },
-  { key: "Profile", label: "Account", icon: "person-outline", activeIcon: "person" },
+  { key: "Home", labelKey: "tabs.notes", icon: "document-outline", activeIcon: "document" },
+  { key: "Shared", labelKey: "tabs.shared", icon: "share-social-outline", activeIcon: "share-social" },
+  { key: "Delete", labelKey: "tabs.trash", icon: "trash-outline", activeIcon: "trash" },
+  { key: "Profile", labelKey: "tabs.account", icon: "person-outline", activeIcon: "person" },
 ];
 
 const AppBottomTab = ({ navigation, activeTab }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.wrap} pointerEvents="box-none">
@@ -28,7 +30,7 @@ const AppBottomTab = ({ navigation, activeTab }) => {
               activeOpacity={0.85}
             >
               <Icon name={active ? tab.activeIcon : tab.icon} size={22} color={active ? colors.onPrimary : colors.tabInactive} />
-              <Text style={[styles.tabLabel, { color: active ? colors.onPrimary : colors.tabInactive }]}>{tab.label}</Text>
+              <Text style={[styles.tabLabel, { color: active ? colors.onPrimary : colors.tabInactive }]}>{t(tab.labelKey)}</Text>
             </TouchableOpacity>
           );
         })}

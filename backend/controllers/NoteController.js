@@ -88,6 +88,16 @@ export async function InviteUserToNote(req, res) {
   }
 }
 
+export async function GetNoteInvites(req, res) {
+  try {
+    const { id } = req.params;
+    const invites = await NoteService.GetNoteInvites(id, req.user.id);
+    return res.status(200).json(invites);
+  } catch (error) {
+    return handleError(res, error, 'Failed to fetch note invites');
+  }
+}
+
 export async function UpdateInvitePermission(req, res) {
   try {
     const { id } = req.params;
@@ -167,8 +177,8 @@ export async function EditNote(req, res) {
     const { id } = req.params;
     const { title, content } = req.body;
 
-    await NoteService.EditNote(id, req.user.id, title, content);
-    return res.status(200).json({ message: 'Note updated' });
+    const note = await NoteService.EditNote(id, req.user.id, title, content);
+    return res.status(200).json({ message: 'Note updated', note });
   } catch (error) {
     return handleError(res, error, 'Failed to update note');
   }

@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { styles } from "./DeleteStyle";
 import { useAppTheme } from "../../theme/AppTheme";
 import AppHeader from "../../components/AppHeader";
@@ -32,6 +33,7 @@ const formatDate = (value) => {
 
 const Delete = ({ navigation }) => {
   const { colors, isDark } = useAppTheme();
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { items: deletedNotes, loading, error } = useSelector((state) => state.deleted);
   const [searchText, setSearchText] = useState("");
@@ -72,10 +74,10 @@ const Delete = ({ navigation }) => {
         {item.title}
       </Text>
       <Text style={[styles.cardContent, { color: colors.textSecondary }]} numberOfLines={2}>
-        {item.content || "No content yet"}
+        {item.content || t("home.noContent")}
       </Text>
       <Text style={[styles.cardMeta, { color: colors.textMuted }]}>
-        Deleted: {formatDate(item.deleted_at || item.updated_at)}
+        {t("trash.deleted", { date: formatDate(item.deleted_at || item.updated_at) })}
       </Text>
 
       <View style={styles.cardActions}>
@@ -91,7 +93,7 @@ const Delete = ({ navigation }) => {
           activeOpacity={0.85}
         >
           <Icon name="refresh-outline" size={16} color={colors.onPrimary} />
-          <Text style={[styles.restoreText, { color: colors.onPrimary }]}>Restore</Text>
+          <Text style={[styles.restoreText, { color: colors.onPrimary }]}>{t("trash.restore")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -122,9 +124,9 @@ const Delete = ({ navigation }) => {
           contentContainerStyle={{ paddingBottom: 120 }}
         >
           <View style={styles.titleSection}>
-            <Text style={[styles.mainTitle, { color: colors.textPrimary }]}>Trash</Text>
+            <Text style={[styles.mainTitle, { color: colors.textPrimary }]}>{t("trash.title")}</Text>
             <Text style={[styles.statsText, { color: colors.textMuted }]}>
-              {filteredNotes.length} notes - Auto-deletes after 30 days
+              {t("trash.stats", { count: filteredNotes.length })}
             </Text>
           </View>
 
@@ -140,13 +142,13 @@ const Delete = ({ navigation }) => {
             activeOpacity={0.85}
           >
             <Icon name="trash-outline" size={16} color={colors.onPrimary} />
-            <Text style={[styles.deleteAllText, { color: colors.onPrimary }]}>Delete all</Text>
+            <Text style={[styles.deleteAllText, { color: colors.onPrimary }]}>{t("common.deleteAll")}</Text>
           </TouchableOpacity>
 
           <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Icon name="search-outline" size={20} color={colors.textMuted} />
             <TextInput
-              placeholder="Search by title..."
+              placeholder={t("common.searchByTitle")}
               placeholderTextColor={colors.textMuted}
               style={[styles.searchInput, { color: colors.textPrimary }]}
               value={searchText}
@@ -180,9 +182,9 @@ const Delete = ({ navigation }) => {
                   color={isDark ? colors.primary : "#caa7ff"}
                 />
               </View>
-              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>Trash is empty</Text>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>{t("trash.emptyTitle")}</Text>
               <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                Deleted notes will appear here
+                {t("trash.emptyText")}
               </Text>
             </View>
           )}
@@ -217,9 +219,9 @@ const Delete = ({ navigation }) => {
               <View style={[styles.modalIcon, { backgroundColor: colors.surfaceSoft }]}>
                 <Icon name="trash-outline" size={28} color={colors.primary} />
               </View>
-              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Empty trash?</Text>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>{t("trash.emptyTrashTitle")}</Text>
               <Text style={[styles.modalText, { color: colors.textMuted }]}>
-                All notes will be permanently deleted and cannot be restored.
+                {t("trash.emptyTrashText")}
               </Text>
 
               <View style={styles.modalActions}>
@@ -227,13 +229,13 @@ const Delete = ({ navigation }) => {
                   style={[styles.modalCancel, { borderColor: colors.border, backgroundColor: colors.surfaceSoft }]}
                   onPress={() => setShowDeleteAllModal(false)}
                 >
-                  <Text style={[styles.modalCancelText, { color: colors.textPrimary }]}>Cancel</Text>
+                  <Text style={[styles.modalCancelText, { color: colors.textPrimary }]}>{t("common.cancel")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalConfirm, { backgroundColor: colors.primary }]}
                   onPress={handleDeleteAll}
                 >
-                  <Text style={[styles.modalConfirmText, { color: colors.onPrimary }]}>Delete all</Text>
+                  <Text style={[styles.modalConfirmText, { color: colors.onPrimary }]}>{t("common.deleteAll")}</Text>
                 </TouchableOpacity>
               </View>
             </Pressable>

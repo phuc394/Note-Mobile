@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Modal,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -10,28 +11,60 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { io as createSocket } from "socket.io-client";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { useAppTheme } from "../../theme/AppTheme";
-import { fetchNote, togglePublicNote, updateNote } from "../../redux/notesSlice";
+import {
+  fetchNote,
+  fetchNoteInvites,
+  inviteUserToNote,
+  removeNoteInvite,
+  togglePublicNote,
+  updateNote,
+} from "../../redux/notesSlice";
 import { styles } from "./NoteDetailsStyle";
 
 const formatDate = (value) => {
-  if (!value) return "Not saved yet";
+  if (!value) return "";
   return new Date(value).toISOString().slice(0, 10);
 };
 
+const SOCKET_URL = "http://localhost:3000";
+const AUTOSAVE_DELAY = 2000;
+
 const NoteDetails = ({ navigation, route }) => {
   const { colors, isDark } = useAppTheme();
+  const { t } = useTranslation();
   const dispatch = useDispatch();
-  const { selectedNote, loading, error } = useSelector((state) => state.notes);
+  const { selectedNote, invites, invitesLoading, loading, error } = useSelector(
+    (state) => state.notes
+  );
+  const token = useSelector((state) => state.auth.token);
   const noteId = route.params?.noteId;
   const currentNote =
     selectedNote && String(selectedNote.id) === String(noteId) ? selectedNote : null;
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isPublic, setIsPublic] = useState(false);
-  const isOwner = currentNote?.is_owner === undefined || Boolean(currentNote?.is_owner);
+  const [inviteModalVisible, setInviteModalVisible] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [canEdit, setCanEdit] = useState(false);
+  const [inviteStatus, setInviteStatus] = useState("");
+  const [inviteStatusTone, setInviteStatusTone] = useState("success");
+  const [isInviting, setIsInviting] = useState(false);
+  const [removingInviteEmail, setRemovingInviteEmail] = useState("");
+  const [saveStatus, setSaveStatus] = useState("");
+  const socketRef = useRef(null);
+  const autosaveTimerRef = useRef(null);
+  const isApplyingRemoteRef = useRef(false);
+  const lastSavedTitleRef = useRef("");
+  const lastSavedContentRef = useRef("");
+  const isOwner = currentNote
+    ? currentNote.is_owner === undefined || Boolean(currentNote.is_owner)
+    : false;
+  const canEditNote = currentNote ? isOwner || Boolean(currentNote.shared_can_edit) : false;
 
   useEffect(() => {
     if (noteId) {
@@ -44,8 +77,75 @@ const NoteDetails = ({ navigation, route }) => {
       setTitle(currentNote.title ?? "");
       setContent(currentNote.content ?? "");
       setIsPublic(Boolean(currentNote.is_public));
+      lastSavedTitleRef.current = currentNote.title ?? "";
+      lastSavedContentRef.current = currentNote.content ?? "";
     }
   }, [currentNote]);
+
+  useEffect(() => {
+    if (!noteId || !token) return undefined;
+
+    const socket = createSocket(SOCKET_URL, {
+      transports: ["websocket"],
+      auth: { token },
+    });
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      socket.emit("shared:join", { noteId });
+    });
+
+    socket.on("shared:note-draft", (payload) => {
+      if (String(payload.note_id) !== String(noteId)) return;
+      isApplyingRemoteRef.current = true;
+      if (payload.title !== undefined) {
+        setTitle(payload.title ?? "");
+      }
+      setContent(payload.content ?? "");
+      setSaveStatus(t("note.liveUpdate"));
+      requestAnimationFrame(() => {
+        isApplyingRemoteRef.current = false;
+      });
+    });
+
+    socket.on("shared:note-updated", (payload) => {
+      if (String(payload.note?.id ?? payload.note_id) !== String(noteId)) return;
+
+      if (payload.action === "access-revoked" || payload.action === "deleted") {
+        navigation.navigate("Home");
+        return;
+      }
+
+      if (payload.note?.content !== undefined) {
+        isApplyingRemoteRef.current = true;
+        if (payload.note.title !== undefined) {
+          setTitle(payload.note.title ?? "");
+          lastSavedTitleRef.current = payload.note.title ?? "";
+        }
+        setContent(payload.note.content ?? "");
+        lastSavedContentRef.current = payload.note.content ?? "";
+        setSaveStatus(t("note.saved"));
+        requestAnimationFrame(() => {
+          isApplyingRemoteRef.current = false;
+        });
+      }
+    });
+
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+      }
+      socket.emit("shared:leave", { noteId });
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [navigation, noteId, token]);
+
+  useEffect(() => {
+    if (inviteModalVisible && noteId && isOwner) {
+      dispatch(fetchNoteInvites(noteId));
+    }
+  }, [dispatch, inviteModalVisible, isOwner, noteId]);
 
   const handleTogglePublic = (value) => {
     if (!isOwner) return;
@@ -56,9 +156,105 @@ const NoteDetails = ({ navigation, route }) => {
   const handleSave = async () => {
     try {
       await dispatch(updateNote({ id: noteId, title, content })).unwrap();
+      lastSavedTitleRef.current = title;
+      lastSavedContentRef.current = content;
       navigation.navigate("Home");
     } catch (_error) {
       // Redux error is rendered in the toolbar.
+    }
+  };
+
+  const scheduleAutosave = (nextTitle, nextContent) => {
+    if (!canEditNote) return;
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+    }
+
+    setSaveStatus(t("note.editing"));
+    autosaveTimerRef.current = setTimeout(async () => {
+      const titleChanged = isOwner && nextTitle !== lastSavedTitleRef.current;
+      const contentChanged = nextContent !== lastSavedContentRef.current;
+
+      if (!titleChanged && !contentChanged) {
+        setSaveStatus(t("note.saved"));
+        return;
+      }
+
+      setSaveStatus(t("note.saving"));
+      try {
+        const savedNote = await dispatch(
+          updateNote({ id: noteId, title: nextTitle, content: nextContent })
+        ).unwrap();
+        lastSavedTitleRef.current = savedNote.title ?? nextTitle;
+        lastSavedContentRef.current = nextContent;
+        setSaveStatus(t("note.saved"));
+      } catch (_error) {
+        setSaveStatus(t("note.saveFailed"));
+      }
+    }, AUTOSAVE_DELAY);
+  };
+
+  const handleTitleChange = (nextTitle) => {
+    setTitle(nextTitle);
+    if (isApplyingRemoteRef.current || !isOwner) return;
+
+    socketRef.current?.emit("shared:note-draft", {
+      noteId,
+      title: nextTitle,
+      content,
+    });
+    scheduleAutosave(nextTitle, content);
+  };
+
+  const handleContentChange = (nextContent) => {
+    setContent(nextContent);
+    if (isApplyingRemoteRef.current || !canEditNote) return;
+
+    socketRef.current?.emit("shared:note-draft", {
+      noteId,
+      title,
+      content: nextContent,
+    });
+    scheduleAutosave(title, nextContent);
+  };
+
+  const handleInvite = async () => {
+    const email = inviteEmail.trim();
+    if (!email) {
+      setInviteStatus(t("note.enterEmail"));
+      setInviteStatusTone("error");
+      return;
+    }
+
+    setIsInviting(true);
+    setInviteStatus("");
+    try {
+      await dispatch(inviteUserToNote({ id: noteId, email, can_edit: canEdit })).unwrap();
+      setInviteStatus(t("note.inviteSent"));
+      setInviteStatusTone("success");
+      setInviteEmail("");
+      setCanEdit(false);
+      dispatch(fetchNoteInvites(noteId));
+    } catch (inviteError) {
+      setInviteStatus(inviteError || t("note.inviteFailed"));
+      setInviteStatusTone("error");
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  const handleRemoveInvite = async (email) => {
+    setRemovingInviteEmail(email);
+    setInviteStatus("");
+    try {
+      await dispatch(removeNoteInvite({ id: noteId, email })).unwrap();
+      setInviteStatus(t("note.guestRemoved"));
+      setInviteStatusTone("success");
+    } catch (removeError) {
+      setInviteStatus(removeError || t("note.removeGuestFailed"));
+      setInviteStatusTone("error");
+    } finally {
+      setRemovingInviteEmail("");
     }
   };
 
@@ -86,14 +282,18 @@ const NoteDetails = ({ navigation, route }) => {
           <View style={styles.toolbarTitleBlock}>
             <TextInput
               value={title}
-              onChangeText={setTitle}
-              placeholder="Untitled note"
+              onChangeText={handleTitleChange}
+              placeholder={t("note.untitled")}
               placeholderTextColor={colors.textMuted}
               selectionColor={colors.primary}
+              editable={isOwner}
               style={[styles.toolbarTitle, { color: colors.textPrimary }]}
             />
             <Text style={[styles.toolbarMeta, { color: colors.textMuted }]}>
-              Last updated {formatDate(currentNote?.updated_at || currentNote?.created_at)}
+              {saveStatus ||
+                t("note.lastUpdated", {
+                  date: formatDate(currentNote?.updated_at || currentNote?.created_at) || t("note.notSaved"),
+                })}
             </Text>
           </View>
 
@@ -105,7 +305,7 @@ const NoteDetails = ({ navigation, route }) => {
                 color={colors.textPrimary}
               />
               <Text style={[styles.visibilityText, { color: colors.textPrimary }]}>
-                {isPublic ? "Public" : "Private"}
+                {isPublic ? t("home.public") : t("home.private")}
               </Text>
               <Switch
                 value={isPublic}
@@ -122,7 +322,7 @@ const NoteDetails = ({ navigation, route }) => {
               activeOpacity={0.85}
             >
               <Icon name="checkmark" size={18} color={colors.onPrimary} />
-              <Text style={[styles.saveText, { color: colors.onPrimary }]}>Save</Text>
+              <Text style={[styles.saveText, { color: colors.onPrimary }]}>{t("common.save")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -138,8 +338,31 @@ const NoteDetails = ({ navigation, route }) => {
           <View style={[styles.noticeBar, { backgroundColor: colors.surfaceSoft }]}>
             <Icon name="information-circle-outline" size={16} color={colors.textMuted} />
             <Text style={[styles.noticeText, { color: colors.textMuted }]}>
-              Visibility can only be changed by the note owner.
+              {t("note.visibilityOwnerOnly")}
             </Text>
+          </View>
+        ) : null}
+
+        {isOwner && isPublic ? (
+          <View style={[styles.inviteBar, { backgroundColor: colors.surfaceSoft }]}>
+            <View style={styles.inviteCopy}>
+              <Icon name="mail-outline" size={17} color={colors.textPrimary} />
+              <Text style={[styles.inviteText, { color: colors.textPrimary }]}>
+                {t("note.inviteBar")}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.inviteButton, { backgroundColor: colors.primary }]}
+              onPress={() => {
+                setInviteStatus("");
+                setInviteStatusTone("success");
+                setInviteModalVisible(true);
+              }}
+              activeOpacity={0.85}
+            >
+              <Icon name="person-add-outline" size={16} color={colors.onPrimary} />
+              <Text style={[styles.inviteButtonText, { color: colors.onPrimary }]}>{t("note.invite")}</Text>
+            </TouchableOpacity>
           </View>
         ) : null}
 
@@ -159,16 +382,192 @@ const NoteDetails = ({ navigation, route }) => {
             ) : (
               <TextInput
                 value={content}
-                onChangeText={setContent}
-                placeholder="Start writing..."
+                onChangeText={handleContentChange}
+                placeholder={t("note.startWriting")}
                 placeholderTextColor={colors.textMuted}
                 selectionColor={colors.primary}
+                editable={canEditNote}
                 multiline
-                style={[styles.documentBody, { color: colors.textPrimary }]}
+                style={[
+                  styles.documentBody,
+                  { color: canEditNote ? colors.textPrimary : colors.textMuted },
+                ]}
               />
             )}
           </View>
         </ScrollView>
+
+        <Modal
+          visible={inviteModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setInviteModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View
+              style={[
+                styles.inviteModal,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <View style={styles.modalHeader}>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>{t("note.inviteByEmail")}</Text>
+                <TouchableOpacity
+                  style={[styles.modalClose, { backgroundColor: colors.surfaceSoft }]}
+                  onPress={() => setInviteModalVisible(false)}
+                >
+                  <Icon name="close" size={18} color={colors.textPrimary} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.guestListBlock}>
+                <View style={styles.guestListHeader}>
+                  <Text style={[styles.guestListTitle, { color: colors.textPrimary }]}>
+                    {t("note.invitedGuests")}
+                  </Text>
+                  {invitesLoading ? <ActivityIndicator color={colors.primary} size="small" /> : null}
+                </View>
+
+                {invitesLoading && invites.length === 0 ? null : invites.length > 0 ? (
+                  <ScrollView style={styles.guestList} nestedScrollEnabled>
+                    {invites.map((invite) => {
+                      const email = invite.invited_gmail;
+                      const isRemoving = removingInviteEmail === email;
+                      return (
+                        <View
+                          key={`${invite.note_id}-${email}`}
+                          style={[
+                            styles.guestRow,
+                            {
+                              borderColor: colors.border,
+                              backgroundColor: colors.surfaceSoft,
+                            },
+                          ]}
+                        >
+                          <View style={styles.guestInfo}>
+                            <Text
+                              style={[styles.guestName, { color: colors.textPrimary }]}
+                              numberOfLines={1}
+                            >
+                              {invite.username || email}
+                            </Text>
+                            {invite.username ? (
+                              <Text
+                                style={[styles.guestEmail, { color: colors.textMuted }]}
+                                numberOfLines={1}
+                              >
+                                {email}
+                              </Text>
+                            ) : null}
+                            <Text style={[styles.guestPermission, { color: colors.textMuted }]}>
+                              {invite.can_edit ? t("common.canEdit") : t("common.viewOnly")}
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            style={[
+                              styles.kickButton,
+                              {
+                                backgroundColor: isDark ? colors.accentStrong : "#ff5252",
+                                opacity: isRemoving ? 0.65 : 1,
+                              },
+                            ]}
+                            onPress={() => handleRemoveInvite(email)}
+                            disabled={isRemoving}
+                            activeOpacity={0.85}
+                          >
+                            {isRemoving ? (
+                              <ActivityIndicator color={colors.onPrimary} size="small" />
+                            ) : (
+                              <Icon name="person-remove-outline" size={16} color={colors.onPrimary} />
+                            )}
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })}
+                  </ScrollView>
+                ) : (
+                  <Text style={[styles.emptyGuestsText, { color: colors.textMuted }]}>
+                    {t("note.noGuests")}
+                  </Text>
+                )}
+              </View>
+
+              <TextInput
+                value={inviteEmail}
+                onChangeText={setInviteEmail}
+                placeholder={t("note.friendEmail")}
+                placeholderTextColor={colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={[
+                  styles.inviteInput,
+                  {
+                    color: colors.textPrimary,
+                    borderColor: colors.border,
+                    backgroundColor: colors.surfaceSoft,
+                  },
+                ]}
+              />
+
+              <View style={styles.permissionRow}>
+                <View style={styles.permissionTextWrap}>
+                  <Text style={[styles.permissionTitle, { color: colors.textPrimary }]}>
+                    {t("note.allowEditing")}
+                  </Text>
+                  <Text style={[styles.permissionHint, { color: colors.textMuted }]}>
+                    {t("note.offMeansViewOnly")}
+                  </Text>
+                </View>
+                <Switch
+                  value={canEdit}
+                  onValueChange={setCanEdit}
+                  trackColor={{ false: colors.trackOff, true: colors.trackOn }}
+                  thumbColor={colors.surface}
+                />
+              </View>
+
+              {inviteStatus ? (
+                <Text
+                  style={[
+                    styles.inviteStatus,
+                    {
+                      color: inviteStatusTone === "success" ? colors.textPrimary : "#ff6b6b",
+                    },
+                  ]}
+                >
+                  {inviteStatus}
+                </Text>
+              ) : null}
+
+              <TouchableOpacity
+                style={[
+                  styles.modalInviteButton,
+                  {
+                    backgroundColor: colors.primary,
+                    opacity: isInviting ? 0.65 : 1,
+                  },
+                ]}
+                onPress={handleInvite}
+                disabled={isInviting}
+                activeOpacity={0.85}
+              >
+                {isInviting ? (
+                  <ActivityIndicator color={colors.onPrimary} />
+                ) : (
+                  <>
+                    <Icon name="send-outline" size={17} color={colors.onPrimary} />
+                    <Text style={[styles.modalInviteText, { color: colors.onPrimary }]}>
+                      {t("note.sendInvite")}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </View>
   );

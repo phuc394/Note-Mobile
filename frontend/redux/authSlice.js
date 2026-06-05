@@ -48,9 +48,9 @@ export const fetchProfile = createAsyncThunk(
 
 export const updateProfile = createAsyncThunk(
   "auth/updateProfile",
-  async ({ username, email }, { rejectWithValue }) => {
+  async ({ username, email, avatar_url }, { rejectWithValue }) => {
     try {
-      const { data } = await api.put("/auth/me", { username, email });
+      const { data } = await api.put("/auth/me", { username, email, avatar_url });
       return data.user;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
