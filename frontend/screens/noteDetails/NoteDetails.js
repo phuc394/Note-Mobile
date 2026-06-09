@@ -33,6 +33,36 @@ const formatDate = (value) => {
 
 const SOCKET_URL = "http://localhost:3000";
 const AUTOSAVE_DELAY = 2000;
+const REMOTE_TYPING_TTL = 3500;
+const COLLABORATION_COLORS = [
+  "#2563eb",
+  "#dc2626",
+  "#16a34a",
+  "#ca8a04",
+  "#9333ea",
+  "#0891b2",
+  "#ea580c",
+];
+
+const getCollaborationColor = (value = "") => {
+  const text = String(value).toLowerCase();
+  const hash = [...text].reduce((total, char) => total + char.charCodeAt(0), 0);
+  return COLLABORATION_COLORS[hash % COLLABORATION_COLORS.length];
+};
+
+const getEditorIdentity = (payload = {}) => {
+  const editor = payload.editor ?? {};
+  const email = editor.email ?? payload.editor_email ?? "";
+  const username = editor.username ?? payload.editor_username ?? "";
+  const id = editor.id ?? payload.editor_id ?? email ?? username;
+
+  return {
+    id,
+    email,
+    label: email || username || `User #${id}`,
+    color: editor.color || getCollaborationColor(email || username || id),
+  };
+};
 
 const NoteDetails = ({ navigation, route }) => {
   const { colors, isDark } = useAppTheme();
@@ -42,6 +72,7 @@ const NoteDetails = ({ navigation, route }) => {
     (state) => state.notes
   );
   const token = useSelector((state) => state.auth.token);
+  const currentUser = useSelector((state) => state.auth.user);
   const noteId = route.params?.noteId;
   const currentNote =
     selectedNote && String(selectedNote.id) === String(noteId) ? selectedNote : null;
@@ -56,11 +87,13 @@ const NoteDetails = ({ navigation, route }) => {
   const [isInviting, setIsInviting] = useState(false);
   const [removingInviteEmail, setRemovingInviteEmail] = useState("");
   const [saveStatus, setSaveStatus] = useState("");
+  const [remoteEditors, setRemoteEditors] = useState({});
   const socketRef = useRef(null);
   const autosaveTimerRef = useRef(null);
   const isApplyingRemoteRef = useRef(false);
   const lastSavedTitleRef = useRef("");
   const lastSavedContentRef = useRef("");
+  const remoteEditorTimersRef = useRef({});
   const isOwner = currentNote
     ? currentNote.is_owner === undefined || Boolean(currentNote.is_owner)
     : false;
@@ -85,6 +118,7 @@ const NoteDetails = ({ navigation, route }) => {
   useEffect(() => {
     if (!noteId || !token) return undefined;
 
+    setRemoteEditors({});
     const socket = createSocket(SOCKET_URL, {
       transports: ["websocket"],
       auth: { token },
@@ -97,6 +131,25 @@ const NoteDetails = ({ navigation, route }) => {
 
     socket.on("shared:note-draft", (payload) => {
       if (String(payload.note_id) !== String(noteId)) return;
+      if (String(payload.editor_id) === String(currentUser?.id)) return;
+
+      const editor = getEditorIdentity(payload);
+      if (remoteEditorTimersRef.current[editor.id]) {
+        clearTimeout(remoteEditorTimersRef.current[editor.id]);
+      }
+      setRemoteEditors((currentEditors) => ({
+        ...currentEditors,
+        [editor.id]: editor,
+      }));
+      remoteEditorTimersRef.current[editor.id] = setTimeout(() => {
+        setRemoteEditors((currentEditors) => {
+          const nextEditors = { ...currentEditors };
+          delete nextEditors[editor.id];
+          return nextEditors;
+        });
+        delete remoteEditorTimersRef.current[editor.id];
+      }, REMOTE_TYPING_TTL);
+
       isApplyingRemoteRef.current = true;
       if (payload.title !== undefined) {
         setTitle(payload.title ?? "");
@@ -135,11 +188,13 @@ const NoteDetails = ({ navigation, route }) => {
       if (autosaveTimerRef.current) {
         clearTimeout(autosaveTimerRef.current);
       }
+      Object.values(remoteEditorTimersRef.current).forEach(clearTimeout);
+      remoteEditorTimersRef.current = {};
       socket.emit("shared:leave", { noteId });
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [navigation, noteId, token]);
+  }, [currentUser?.id, navigation, noteId, t, token]);
 
   useEffect(() => {
     if (inviteModalVisible && noteId && isOwner) {
@@ -257,6 +312,8 @@ const NoteDetails = ({ navigation, route }) => {
       setRemovingInviteEmail("");
     }
   };
+
+  const activeRemoteEditors = Object.values(remoteEditors);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -377,6 +434,28 @@ const NoteDetails = ({ navigation, route }) => {
               },
             ]}
           >
+            {activeRemoteEditors.length > 0 ? (
+              <View style={styles.remoteEditorsLayer} pointerEvents="none">
+                {activeRemoteEditors.map((editor, index) => (
+                  <View
+                    key={editor.id}
+                    style={[
+                      styles.remoteEditorMarker,
+                      {
+                        marginTop: index === 0 ? 0 : 6,
+                        borderColor: editor.color,
+                        backgroundColor: editor.color,
+                      },
+                    ]}
+                  >
+                    <Text style={styles.remoteEditorText} numberOfLines={1}>
+                      {editor.label}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
             {loading && !currentNote ? (
               <ActivityIndicator color={colors.primary} style={styles.loader} />
             ) : (
