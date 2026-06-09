@@ -10,6 +10,14 @@ import { GetNote } from './services/NoteService.js';
 validateEnv();
 
 const port = Number(process.env.PORT ?? 3000);
+const collaborationColors = ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#0891b2', '#ea580c'];
+
+function getCollaborationColor(value = '') {
+  const text = String(value).toLowerCase();
+  const hash = [...text].reduce((total, char) => total + char.charCodeAt(0), 0);
+  return collaborationColors[hash % collaborationColors.length];
+}
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -61,6 +69,12 @@ io.on('connection', (socket) => {
       socket.to(`note:${noteId}`).emit('shared:note-draft', {
         note_id: Number(noteId),
         editor_id: socket.user.id,
+        editor: {
+          id: socket.user.id,
+          username: socket.user.username,
+          email: socket.user.email,
+          color: getCollaborationColor(socket.user.email ?? socket.user.username ?? socket.user.id),
+        },
         title: note.is_owner ? title : undefined,
         content: content ?? '',
       });
